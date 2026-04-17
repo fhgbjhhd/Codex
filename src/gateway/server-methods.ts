@@ -17,6 +17,7 @@ import { execApprovalsHandlers } from "./server-methods/exec-approvals.js";
 import { healthHandlers } from "./server-methods/health.js";
 import { logsHandlers } from "./server-methods/logs.js";
 import { modelsHandlers } from "./server-methods/models.js";
+import { n8nHandlers } from "./server-methods/n8n.js";
 import { nodeHandlers } from "./server-methods/nodes.js";
 import { pushHandlers } from "./server-methods/push.js";
 import { sendHandlers } from "./server-methods/send.js";
@@ -76,6 +77,7 @@ export const coreGatewayHandlers: GatewayRequestHandlers = {
   ...execApprovalsHandlers,
   ...webHandlers,
   ...modelsHandlers,
+  ...n8nHandlers,
   ...configHandlers,
   ...wizardHandlers,
   ...talkHandlers,
@@ -104,7 +106,7 @@ export async function handleGatewayRequest(
     return;
   }
   if (CONTROL_PLANE_WRITE_METHODS.has(req.method)) {
-    const budget = consumeControlPlaneWriteBudget({ client });
+    const budget = consumeControlPlaneWriteBudget({ client, method: req.method });
     if (!budget.allowed) {
       const actor = resolveControlPlaneActor(client);
       context.logGateway.warn(
@@ -121,7 +123,7 @@ export async function handleGatewayRequest(
             retryAfterMs: budget.retryAfterMs,
             details: {
               method: req.method,
-              limit: "3 per 60s",
+              limit: budget.limitLabel,
             },
           },
         ),

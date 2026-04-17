@@ -1,0 +1,16 @@
+{
+  "skills": [
+    {
+      "id": "topview",
+      "name": "TopView",
+      "icon": "🔴",
+      "skillDir": "topview-bridge",
+      "entrypoint": "topview-bridge/topview.js",
+      "pythonBridge": "topview-bridge/topview.py",
+      "schema": "topview-bridge/topview.json",
+      "homepage": "https://www.topview.ai",
+      "primaryEnv": "TOPVIEW_API_KEY",
+      "endpointEnv": "TOPVIEW_API_ENDPOINT"
+    }
+  ]
+}

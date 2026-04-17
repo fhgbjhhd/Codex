@@ -3,6 +3,10 @@ const KEY = "openclaw.control.settings.v1";
 import { isSupportedLocale } from "../i18n/index.ts";
 import type { ThemeMode } from "./theme.ts";
 
+const LEGACY_DEV_PORTS = new Set(["3000", "5173"]);
+const LOCAL_LOOPBACK_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]", "::1"]);
+const DEFAULT_LOCAL_GATEWAY_PORT = "18789";
+
 export type UiSettings = {
   gatewayUrl: string;
   token: string;
@@ -17,11 +21,46 @@ export type UiSettings = {
   locale?: string;
 };
 
+function resolveDefaultGatewayUrl(
+  currentLocation: Pick<Location, "protocol" | "host" | "hostname" | "port">,
+) {
+  const proto = currentLocation.protocol === "https:" ? "wss" : "ws";
+  if (
+    LOCAL_LOOPBACK_HOSTS.has(currentLocation.hostname) &&
+    LEGACY_DEV_PORTS.has(currentLocation.port)
+  ) {
+    return `${proto}://127.0.0.1:${DEFAULT_LOCAL_GATEWAY_PORT}`;
+  }
+  return `${proto}://${currentLocation.host}`;
+}
+
+function normalizeStoredGatewayUrl(
+  rawGatewayUrl: string,
+  currentLocation: Pick<Location, "protocol" | "host" | "hostname" | "port">,
+) {
+  const trimmed = rawGatewayUrl.trim();
+  if (!trimmed) {
+    return resolveDefaultGatewayUrl(currentLocation);
+  }
+  try {
+    const parsed = new URL(trimmed);
+    if (
+      LOCAL_LOOPBACK_HOSTS.has(currentLocation.hostname) &&
+      LEGACY_DEV_PORTS.has(currentLocation.port) &&
+      LOCAL_LOOPBACK_HOSTS.has(parsed.hostname) &&
+      LEGACY_DEV_PORTS.has(parsed.port)
+    ) {
+      const nextProtocol = currentLocation.protocol === "https:" ? "wss:" : "ws:";
+      return `${nextProtocol}//127.0.0.1:${DEFAULT_LOCAL_GATEWAY_PORT}`;
+    }
+  } catch {
+    return trimmed;
+  }
+  return trimmed;
+}
+
 export function loadSettings(): UiSettings {
-  const defaultUrl = (() => {
-    const proto = location.protocol === "https:" ? "wss" : "ws";
-    return `${proto}://${location.host}`;
-  })();
+  const defaultUrl = resolveDefaultGatewayUrl(location);
 
   const defaults: UiSettings = {
     gatewayUrl: defaultUrl,
@@ -45,7 +84,7 @@ export function loadSettings(): UiSettings {
     return {
       gatewayUrl:
         typeof parsed.gatewayUrl === "string" && parsed.gatewayUrl.trim()
-          ? parsed.gatewayUrl.trim()
+          ? normalizeStoredGatewayUrl(parsed.gatewayUrl, location)
           : defaults.gatewayUrl,
       token: typeof parsed.token === "string" ? parsed.token : defaults.token,
       sessionKey:
@@ -89,3 +128,8 @@ export function loadSettings(): UiSettings {
 export function saveSettings(next: UiSettings) {
   localStorage.setItem(KEY, JSON.stringify(next));
 }
+
+export const __storageTestUtils = {
+  normalizeStoredGatewayUrl,
+  resolveDefaultGatewayUrl,
+};

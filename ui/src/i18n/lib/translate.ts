@@ -1,9 +1,19 @@
 import { en } from "../locales/en.ts";
+import { pt_BR } from "../locales/pt-BR.ts";
+import { zh_CN } from "../locales/zh-CN.ts";
+import { zh_TW } from "../locales/zh-TW.ts";
 import type { Locale, TranslationMap } from "./types.ts";
 
 type Subscriber = (locale: Locale) => void;
 
 export const SUPPORTED_LOCALES: ReadonlyArray<Locale> = ["en", "zh-CN", "zh-TW", "pt-BR"];
+
+const BUILTIN_TRANSLATIONS: Record<Locale, TranslationMap> = {
+  en,
+  "pt-BR": pt_BR,
+  "zh-CN": zh_CN,
+  "zh-TW": zh_TW,
+};
 
 export function isSupportedLocale(value: string | null | undefined): value is Locale {
   return value !== null && value !== undefined && SUPPORTED_LOCALES.includes(value as Locale);
@@ -11,7 +21,7 @@ export function isSupportedLocale(value: string | null | undefined): value is Lo
 
 class I18nManager {
   private locale: Locale = "en";
-  private translations: Record<Locale, TranslationMap> = { en } as Record<Locale, TranslationMap>;
+  private translations: Record<Locale, TranslationMap> = { ...BUILTIN_TRANSLATIONS };
   private subscribers: Set<Subscriber> = new Set();
 
   constructor() {
@@ -34,44 +44,35 @@ class I18nManager {
   }
 
   private loadLocale() {
-    const initialLocale = this.resolveInitialLocale();
-    if (initialLocale === "en") {
-      this.locale = "en";
-      return;
+    this.locale = this.resolveInitialLocale();
+    this.ensureLocaleLoaded(this.locale);
+  }
+
+  private ensureLocaleLoaded(locale: Locale) {
+    if (!this.translations[locale]) {
+      this.translations[locale] = BUILTIN_TRANSLATIONS[locale];
     }
-    // Use the normal locale setter so startup locale loading follows the same
-    // translation-loading + notify path as manual locale changes.
-    void this.setLocale(initialLocale);
+  }
+
+  private syncLocaleFromStorage() {
+    const saved = localStorage.getItem("openclaw.i18n.locale");
+    if (isSupportedLocale(saved) && saved !== this.locale) {
+      this.locale = saved;
+      this.ensureLocaleLoaded(saved);
+    }
   }
 
   public getLocale(): Locale {
+    this.syncLocaleFromStorage();
     return this.locale;
   }
 
   public async setLocale(locale: Locale) {
-    const needsTranslationLoad = !this.translations[locale];
-    if (this.locale === locale && !needsTranslationLoad) {
+    const changed = this.locale !== locale;
+    const hadTranslation = Boolean(this.translations[locale]);
+    this.ensureLocaleLoaded(locale);
+    if (!changed && hadTranslation) {
       return;
-    }
-
-    // Lazy load translations if needed
-    if (needsTranslationLoad) {
-      try {
-        let module: Record<string, TranslationMap>;
-        if (locale === "zh-CN") {
-          module = await import("../locales/zh-CN.ts");
-        } else if (locale === "zh-TW") {
-          module = await import("../locales/zh-TW.ts");
-        } else if (locale === "pt-BR") {
-          module = await import("../locales/pt-BR.ts");
-        } else {
-          return;
-        }
-        this.translations[locale] = module[locale.replace("-", "_")];
-      } catch (e) {
-        console.error(`Failed to load locale: ${locale}`, e);
-        return;
-      }
     }
 
     this.locale = locale;
@@ -93,6 +94,7 @@ class I18nManager {
   }
 
   public t(key: string, params?: Record<string, string>): string {
+    this.syncLocaleFromStorage();
     const keys = key.split(".");
     let value: unknown = this.translations[this.locale] || this.translations["en"];
 

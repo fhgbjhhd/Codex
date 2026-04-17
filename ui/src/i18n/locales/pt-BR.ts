@@ -29,6 +29,7 @@ export const pt_BR: TranslationMap = {
     instances: "Instâncias",
     sessions: "Sessões",
     usage: "Uso",
+    tasks: "Tarefas em Tempo Real",
     cron: "Tarefas Cron",
     skills: "Habilidades",
     nodes: "Nós",
@@ -44,11 +45,12 @@ export const pt_BR: TranslationMap = {
     instances: "Beacons de presença de clientes e nós conectados.",
     sessions: "Inspecionar sessões ativas e ajustar padrões por sessão.",
     usage: "Monitorar uso e custos da API.",
+    tasks: "Acompanhar execuções do n8n e o estado de cada etapa da ponte.",
     cron: "Agendar despertares e execuções recorrentes de agentes.",
     skills: "Gerenciar disponibilidade de habilidades e injeção de chaves de API.",
     nodes: "Dispositivos pareados, capacidades e exposição de comandos.",
     chat: "Sessão de chat direta com o gateway para intervenções rápidas.",
-    config: "Editar ~/.openclaw/openclaw.json com segurança.",
+    config: "Editar a configuração do gateway com segurança.",
     debug: "Snapshots do gateway, eventos e chamadas RPC manuais.",
     logs: "Acompanhamento ao vivo dos logs de arquivo do gateway.",
   },
@@ -58,6 +60,8 @@ export const pt_BR: TranslationMap = {
       subtitle: "Onde o dashboard se conecta e como ele se autentica.",
       wsUrl: "URL WebSocket",
       token: "Token do Gateway",
+      tokenHint:
+        "Cole aqui o valor real do token, não um comando da CLI. Se precisar, use o link do dashboard com token gerado pela CLI.",
       password: "Senha (não armazenada)",
       sessionKey: "Chave de Sessão Padrão",
       language: "Idioma",
@@ -101,7 +105,7 @@ export const pt_BR: TranslationMap = {
     pairing: {
       hint: "Este dispositivo precisa de aprovação de pareamento do host do gateway.",
       mobileHint:
-        "No celular? Copie a URL completa (incluindo #token=...) executando openclaw dashboard --no-open no desktop.",
+        "No celular? Copie a URL completa (incluindo #token=...) gerada pela CLI no seu computador principal.",
     },
     insecure: {
       hint: "Esta página é HTTP, então o navegador bloqueia a identidade do dispositivo. Use HTTPS (Tailscale Serve) ou abra {url} no host do gateway.",

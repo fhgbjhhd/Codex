@@ -575,6 +575,43 @@ export type CronRunsResult = {
   nextOffset?: number | null;
 };
 
+export type N8nTaskStep = {
+  key: string;
+  label: string;
+  status: "pending" | "running" | "success" | "error";
+  detail?: string;
+  updatedAtMs: number;
+};
+
+export type N8nTaskRun = {
+  id: string;
+  workflowKey: string;
+  workflowLabel: string;
+  sourceUrl?: string;
+  region?: string;
+  status: "pending" | "running" | "success" | "error";
+  createdAtMs: number;
+  updatedAtMs: number;
+  executionId?: string;
+  error?: string;
+  steps: N8nTaskStep[];
+};
+
+export type N8nBridgeStatus = {
+  configured: boolean;
+  webhookConfigured: boolean;
+  callbackConfigured: boolean;
+  callbackUrl: string;
+  runsPath: string;
+  workflowKey: string;
+  workflowLabel: string;
+};
+
+export type N8nRunsResult = {
+  entries?: N8nTaskRun[];
+  total?: number;
+};
+
 export type SkillsStatusConfigCheck = {
   path: string;
   satisfied: boolean;

@@ -63,7 +63,19 @@ vi.mock("./gateway.ts", () => {
     }
   }
 
-  return { GatewayBrowserClient, resolveGatewayErrorDetailCode };
+  class GatewayRequestError extends Error {
+    readonly gatewayCode: string;
+    readonly details?: unknown;
+
+    constructor(error: { code: string; message: string; details?: unknown }) {
+      super(error.message);
+      this.name = "GatewayRequestError";
+      this.gatewayCode = error.code;
+      this.details = error.details;
+    }
+  }
+
+  return { GatewayBrowserClient, GatewayRequestError, resolveGatewayErrorDetailCode };
 });
 
 function createHost() {

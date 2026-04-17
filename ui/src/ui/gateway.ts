@@ -5,7 +5,10 @@ import {
   type GatewayClientMode,
   type GatewayClientName,
 } from "../../../src/gateway/protocol/client-info.js";
-import { readConnectErrorDetailCode } from "../../../src/gateway/protocol/connect-error-details.js";
+import {
+  ConnectErrorDetailCodes,
+  readConnectErrorDetailCode,
+} from "../../../src/gateway/protocol/connect-error-details.js";
 import { clearDeviceAuthToken, loadDeviceAuthToken, storeDeviceAuthToken } from "./device-auth.ts";
 import { loadOrCreateDeviceIdentity, signDevicePayload } from "./device-identity.ts";
 import { generateUUID } from "./uuid.ts";
@@ -101,11 +104,13 @@ export class GatewayBrowserClient {
   private connectTimer: number | null = null;
   private backoffMs = 800;
   private pendingConnectError: GatewayErrorInfo | undefined;
+  private reconnectBlocked = false;
 
   constructor(private opts: GatewayBrowserClientOptions) {}
 
   start() {
     this.closed = false;
+    this.reconnectBlocked = false;
     this.connect();
   }
 
@@ -114,6 +119,7 @@ export class GatewayBrowserClient {
     this.ws?.close();
     this.ws = null;
     this.pendingConnectError = undefined;
+    this.reconnectBlocked = false;
     this.flushPending(new Error("gateway client stopped"));
   }
 
@@ -122,7 +128,7 @@ export class GatewayBrowserClient {
   }
 
   private connect() {
-    if (this.closed) {
+    if (this.closed || this.reconnectBlocked) {
       return;
     }
     this.ws = new WebSocket(this.opts.url);
@@ -135,6 +141,10 @@ export class GatewayBrowserClient {
       this.ws = null;
       this.flushPending(new Error(`gateway closed (${ev.code}): ${reason}`));
       this.opts.onClose?.({ code: ev.code, reason, error: connectError });
+      if (connectError && shouldBlockReconnect(connectError)) {
+        this.reconnectBlocked = true;
+        return;
+      }
       this.scheduleReconnect();
     });
     this.ws.addEventListener("error", () => {
@@ -357,4 +367,18 @@ export class GatewayBrowserClient {
       void this.sendConnect();
     }, 750);
   }
+}
+
+function shouldBlockReconnect(error: GatewayErrorInfo): boolean {
+  const detailCode = readConnectErrorDetailCode(error.details);
+  return (
+    detailCode === ConnectErrorDetailCodes.AUTH_REQUIRED ||
+    detailCode === ConnectErrorDetailCodes.AUTH_TOKEN_MISSING ||
+    detailCode === ConnectErrorDetailCodes.AUTH_TOKEN_MISMATCH ||
+    detailCode === ConnectErrorDetailCodes.AUTH_TOKEN_NOT_CONFIGURED ||
+    detailCode === ConnectErrorDetailCodes.AUTH_PASSWORD_MISSING ||
+    detailCode === ConnectErrorDetailCodes.AUTH_PASSWORD_MISMATCH ||
+    detailCode === ConnectErrorDetailCodes.AUTH_PASSWORD_NOT_CONFIGURED ||
+    detailCode === ConnectErrorDetailCodes.AUTH_RATE_LIMITED
+  );
 }

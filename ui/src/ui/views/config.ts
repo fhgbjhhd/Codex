@@ -13,6 +13,7 @@ export type ConfigProps = {
   saving: boolean;
   applying: boolean;
   updating: boolean;
+  updateRetryUntilMs: number | null;
   connected: boolean;
   schema: unknown;
   schemaLoading: boolean;
@@ -462,6 +463,10 @@ export function renderConfig(props: ConfigProps) {
     hasChanges &&
     (props.formMode === "raw" ? true : canSaveForm);
   const canUpdate = props.connected && !props.applying && !props.updating;
+  const updateRetryRemainingMs = props.updateRetryUntilMs
+    ? Math.max(0, props.updateRetryUntilMs - Date.now())
+    : 0;
+  const canTriggerUpdate = canUpdate && updateRetryRemainingMs === 0;
   const selectedTags = new Set(getTagFilters(props.searchQuery));
 
   return html`
@@ -656,10 +661,16 @@ export function renderConfig(props: ConfigProps) {
             </button>
             <button
               class="btn btn--sm"
-              ?disabled=${!canUpdate}
+              ?disabled=${!canTriggerUpdate}
               @click=${props.onUpdate}
             >
-              ${props.updating ? "Updating…" : "Update"}
+              ${
+                props.updating
+                  ? "Updating…"
+                  : updateRetryRemainingMs > 0
+                    ? `Retry in ${Math.ceil(updateRetryRemainingMs / 1000)}s`
+                    : "Update"
+              }
             </button>
           </div>
         </div>

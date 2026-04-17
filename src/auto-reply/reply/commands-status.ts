@@ -1,7 +1,10 @@
+import fs from "node:fs/promises";
+import path from "node:path";
 import {
   resolveAgentDir,
   resolveDefaultAgentId,
   resolveSessionAgentId,
+  resolveAgentWorkspaceDir,
 } from "../../agents/agent-scope.js";
 import { resolveModelAuthLabel } from "../../agents/model-auth-label.js";
 import { listSubagentRunsForRequester } from "../../agents/subagent-registry.js";
@@ -27,6 +30,64 @@ import type { ReplyPayload } from "../types.js";
 import type { CommandContext } from "./commands-types.js";
 import { getFollowupQueueDepth, resolveQueueSettings } from "./queue.js";
 import { resolveSubagentLabel } from "./subagents-utils.js";
+
+const STATUS_BRIEFING_FILES = ["MEMORY.md", "memory.md"] as const;
+const STATUS_BRIEFING_HEADINGS = new Set(["battle report", "status briefing", "context mapping"]);
+const STATUS_BRIEFING_MAX_LINES = 5;
+
+function extractStatusBriefingLines(markdown: string): string[] {
+  const lines = markdown.split(/\r?\n/);
+  const collected: string[] = [];
+  let inSection = false;
+  for (const rawLine of lines) {
+    const headingMatch = rawLine.match(/^#{1,6}\s+(.*)$/);
+    if (headingMatch) {
+      const heading = headingMatch[1]?.trim().toLowerCase() ?? "";
+      if (inSection) {
+        break;
+      }
+      if (STATUS_BRIEFING_HEADINGS.has(heading)) {
+        inSection = true;
+      }
+      continue;
+    }
+    if (!inSection) {
+      continue;
+    }
+    const trimmed = rawLine.trim();
+    if (!trimmed) {
+      continue;
+    }
+    const normalized = trimmed
+      .replace(/^[-*]\s+/, "")
+      .replace(/^\d+\.\s+/, "")
+      .trim();
+    if (!normalized) {
+      continue;
+    }
+    collected.push(normalized);
+    if (collected.length >= STATUS_BRIEFING_MAX_LINES) {
+      break;
+    }
+  }
+  return collected;
+}
+
+async function loadStatusBriefingLines(workspaceDir: string): Promise<string[]> {
+  for (const fileName of STATUS_BRIEFING_FILES) {
+    const filePath = path.join(workspaceDir, fileName);
+    try {
+      const raw = await fs.readFile(filePath, "utf-8");
+      const lines = extractStatusBriefingLines(raw);
+      if (lines.length > 0) {
+        return lines;
+      }
+    } catch {
+      continue;
+    }
+  }
+  return [];
+}
 
 export async function buildStatusReply(params: {
   cfg: OpenClawConfig;
@@ -75,6 +136,8 @@ export async function buildStatusReply(params: {
     ? resolveSessionAgentId({ sessionKey, config: cfg })
     : resolveDefaultAgentId(cfg);
   const statusAgentDir = resolveAgentDir(cfg, statusAgentId);
+  const statusAgentWorkspaceDir = resolveAgentWorkspaceDir(cfg, statusAgentId);
+  const briefingLines = await loadStatusBriefingLines(statusAgentWorkspaceDir);
   const currentUsageProvider = (() => {
     try {
       return resolveUsageProviderId(provider);
@@ -187,6 +250,7 @@ export async function buildStatusReply(params: {
     modelAuth: selectedModelAuth,
     activeModelAuth,
     usageLine: usageLine ?? undefined,
+    briefingLines: briefingLines.length > 0 ? briefingLines : undefined,
     queue: {
       mode: queueSettings.mode,
       depth: queueDepth,

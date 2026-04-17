@@ -1,11 +1,12 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { GatewayRequestError } from "../gateway.ts";
 import {
   applyConfigSnapshot,
   applyConfig,
+  type ConfigState,
   runUpdate,
   saveConfig,
   updateConfigFormValue,
-  type ConfigState,
 } from "./config.ts";
 
 function createState(): ConfigState {
@@ -34,6 +35,8 @@ function createState(): ConfigState {
     connected: false,
     lastError: null,
     updateRunning: false,
+    updateRetryUntilMs: null,
+    updateRetryTimer: null,
   };
 }
 
@@ -279,6 +282,15 @@ describe("saveConfig", () => {
 });
 
 describe("runUpdate", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-03T12:00:00.000Z"));
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("sends update.run with session key", async () => {
     const request = vi.fn().mockResolvedValue({});
     const state = createState();
@@ -291,5 +303,50 @@ describe("runUpdate", () => {
     expect(request).toHaveBeenCalledWith("update.run", {
       sessionKey: "agent:main:whatsapp:dm:+15555550123",
     });
+    expect(state.updateRetryUntilMs).toBe(Date.now() + 10_000);
+  });
+
+  it("captures retryAfterMs from gateway rate limits", async () => {
+    const request = vi.fn().mockRejectedValue(
+      new GatewayRequestError({
+        code: "UNAVAILABLE",
+        message: "rate limit exceeded for update.run; retry after 54s",
+        details: { retryAfterMs: 54_000 },
+      }),
+    );
+    const state = createState();
+    state.connected = true;
+    state.client = { request } as unknown as ConfigState["client"];
+
+    await runUpdate(state);
+
+    expect(state.updateRetryUntilMs).not.toBeNull();
+    expect(state.lastError).toContain("Retry in 54s");
+  });
+
+  it("surfaces dirty-worktree skips clearly", async () => {
+    const request = vi.fn().mockResolvedValue({
+      result: { status: "skipped", reason: "dirty" },
+    });
+    const state = createState();
+    state.connected = true;
+    state.client = { request } as unknown as ConfigState["client"];
+
+    await runUpdate(state);
+
+    expect(state.lastError).toContain("local changes");
+  });
+
+  it("blocks repeated update.run calls during the local cooldown window", async () => {
+    const request = vi.fn().mockResolvedValue({});
+    const state = createState();
+    state.connected = true;
+    state.client = { request } as unknown as ConfigState["client"];
+
+    await runUpdate(state);
+    await runUpdate(state);
+
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(state.lastError).toContain("Retry in 10s");
   });
 });

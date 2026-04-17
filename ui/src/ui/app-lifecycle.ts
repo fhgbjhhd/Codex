@@ -1,8 +1,10 @@
 import { connectGateway } from "./app-gateway.ts";
 import {
   startLogsPolling,
+  startN8nPolling,
   startNodesPolling,
   stopLogsPolling,
+  stopN8nPolling,
   stopNodesPolling,
   startDebugPolling,
   stopDebugPolling,
@@ -24,6 +26,7 @@ type LifecycleHost = {
   client?: { stop: () => void } | null;
   connected?: boolean;
   tab: Tab;
+  n8nPollInterval: number | null;
   assistantName: string;
   assistantAvatar: string | null;
   assistantAgentId: string | null;
@@ -50,6 +53,7 @@ export function handleConnected(host: LifecycleHost) {
   window.addEventListener("popstate", host.popStateHandler);
   connectGateway(host as unknown as Parameters<typeof connectGateway>[0]);
   startNodesPolling(host as unknown as Parameters<typeof startNodesPolling>[0]);
+  startN8nPolling(host as unknown as Parameters<typeof startN8nPolling>[0]);
   if (host.tab === "logs") {
     startLogsPolling(host as unknown as Parameters<typeof startLogsPolling>[0]);
   }
@@ -67,6 +71,7 @@ export function handleDisconnected(host: LifecycleHost) {
   stopNodesPolling(host as unknown as Parameters<typeof stopNodesPolling>[0]);
   stopLogsPolling(host as unknown as Parameters<typeof stopLogsPolling>[0]);
   stopDebugPolling(host as unknown as Parameters<typeof stopDebugPolling>[0]);
+  stopN8nPolling(host as unknown as Parameters<typeof stopN8nPolling>[0]);
   host.client?.stop();
   host.client = null;
   host.connected = false;

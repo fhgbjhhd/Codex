@@ -104,7 +104,7 @@ describe("gateway control-plane write rate limit", () => {
     expect(logWarn).toHaveBeenCalledTimes(1);
   });
 
-  it("resets the control-plane write budget after 60 seconds", async () => {
+  it("allows one update.run per 10 seconds before cooling down", async () => {
     const handlerCalls = vi.fn();
     const handler: GatewayRequestHandler = (opts) => {
       handlerCalls(opts);
@@ -114,21 +114,52 @@ describe("gateway control-plane write rate limit", () => {
     const client = buildClient();
 
     await runRequest({ method: "update.run", context, client, handler });
-    await runRequest({ method: "update.run", context, client, handler });
-    await runRequest({ method: "update.run", context, client, handler });
 
     const blocked = await runRequest({ method: "update.run", context, client, handler });
     expect(blocked).toHaveBeenCalledWith(
       false,
       undefined,
-      expect.objectContaining({ code: "UNAVAILABLE" }),
+      expect.objectContaining({
+        code: "UNAVAILABLE",
+        details: expect.objectContaining({ limit: "1 per 10s" }),
+      }),
     );
 
-    vi.advanceTimersByTime(60_001);
+    vi.advanceTimersByTime(10_001);
 
     const allowed = await runRequest({ method: "update.run", context, client, handler });
     expect(allowed).toHaveBeenCalledWith(true, undefined, undefined);
-    expect(handlerCalls).toHaveBeenCalledTimes(4);
+    expect(handlerCalls).toHaveBeenCalledTimes(2);
+  });
+
+  it("tracks update.run separately from config writes", async () => {
+    const updateHandlerCalls = vi.fn();
+    const updateHandler: GatewayRequestHandler = (opts) => {
+      updateHandlerCalls(opts);
+      opts.respond(true, undefined, undefined);
+    };
+    const configHandlerCalls = vi.fn();
+    const configHandler: GatewayRequestHandler = (opts) => {
+      configHandlerCalls(opts);
+      opts.respond(true, undefined, undefined);
+    };
+    const context = buildContext();
+    const client = buildClient();
+
+    await runRequest({ method: "config.patch", context, client, handler: configHandler });
+    await runRequest({ method: "config.patch", context, client, handler: configHandler });
+    await runRequest({ method: "config.patch", context, client, handler: configHandler });
+
+    const updateAllowed = await runRequest({
+      method: "update.run",
+      context,
+      client,
+      handler: updateHandler,
+    });
+
+    expect(configHandlerCalls).toHaveBeenCalledTimes(3);
+    expect(updateAllowed).toHaveBeenCalledWith(true, undefined, undefined);
+    expect(updateHandlerCalls).toHaveBeenCalledTimes(1);
   });
 
   it("uses connId fallback when both device and client IP are unknown", () => {

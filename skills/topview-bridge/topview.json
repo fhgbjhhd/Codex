@@ -1,0 +1,137 @@
+{
+  "name": "topview",
+  "version": "1.0.0",
+  "description": "Topview bridge contract for script drafting, task submission, and video URL lookup.",
+  "entrypoint": "topview.js",
+  "functions": [
+    {
+      "name": "generate_script",
+      "description": "Draft a concise video script package from a creative brief.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Shorthand creative brief used as topic when topic is omitted."
+          },
+          "topic": { "type": "string", "description": "Main subject of the video." },
+          "audience": {
+            "type": "string",
+            "description": "Intended audience.",
+            "default": "operators and consultants"
+          },
+          "goal": {
+            "type": "string",
+            "description": "Desired viewer outcome.",
+            "default": "turn AI workflow ideas into a concrete video concept"
+          },
+          "style": {
+            "type": "string",
+            "description": "Tone or visual style.",
+            "default": "clear, premium, concise"
+          },
+          "locale": {
+            "type": "string",
+            "description": "Language/market hint.",
+            "default": "en-US"
+          },
+          "duration_seconds": {
+            "type": "number",
+            "description": "Target runtime in seconds.",
+            "default": 30
+          }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "submit_task",
+      "description": "Submit a Topview text-to-video render job.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "prompt": { "type": "string", "description": "Topview render prompt." },
+          "render_prompt": { "type": "string", "description": "Alias for prompt." },
+          "model": {
+            "type": "string",
+            "description": "Topview model display name.",
+            "default": "Standard"
+          },
+          "aspect_ratio": { "type": "string", "description": "Aspect ratio.", "default": "16:9" },
+          "resolution": { "type": "number", "description": "Render resolution.", "default": 720 },
+          "duration": {
+            "type": "number",
+            "description": "Video duration in seconds.",
+            "default": 5
+          },
+          "count": { "type": "number", "description": "Number of outputs.", "default": 1 },
+          "sound": { "type": "string", "description": "Native audio toggle.", "default": "off" },
+          "board_id": { "type": "string", "description": "Optional Topview board ID." }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "get_video_url",
+      "description": "Poll a Topview task until completion and return video URLs.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "description": "Topview task ID returned by submit_task."
+          },
+          "timeout": {
+            "type": "number",
+            "description": "Polling timeout in seconds.",
+            "default": 600
+          },
+          "interval": {
+            "type": "number",
+            "description": "Polling interval in seconds.",
+            "default": 5
+          }
+        },
+        "required": ["task_id"]
+      }
+    },
+    {
+      "name": "check_topview_status",
+      "description": "Alias for get_video_url. Use when you already have a TopView task ID and want the real task status and video URL.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "description": "Topview task ID returned by submit_task."
+          },
+          "timeout": {
+            "type": "number",
+            "description": "Polling timeout in seconds.",
+            "default": 600
+          },
+          "interval": {
+            "type": "number",
+            "description": "Polling interval in seconds.",
+            "default": 5
+          }
+        },
+        "required": ["task_id"]
+      }
+    },
+    {
+      "name": "get_task_status",
+      "description": "Query a TopView task once and return its current status without waiting for completion.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "description": "TopView task ID to inspect."
+          }
+        },
+        "required": ["task_id"]
+      }
+    }
+  ]
+}

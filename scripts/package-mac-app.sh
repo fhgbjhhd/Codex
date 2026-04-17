@@ -5,6 +5,8 @@ set -euo pipefail
 # Outputs to dist/OpenClaw.app
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+source "${ROOT_DIR}/scripts/openclaw-swift-env.sh"
+openclaw_setup_swift_env "${ROOT_DIR}"
 APP_ROOT="$ROOT_DIR/dist/OpenClaw.app"
 BUILD_ROOT="$ROOT_DIR/apps/macos/.build"
 PRODUCT="OpenClaw"
@@ -128,7 +130,7 @@ cd "$ROOT_DIR/apps/macos"
 echo "🔨 Building $PRODUCT ($BUILD_CONFIG) [${BUILD_ARCHS[*]}]"
 for arch in "${BUILD_ARCHS[@]}"; do
   BUILD_PATH="$(build_path_for_arch "$arch")"
-  swift build -c "$BUILD_CONFIG" --product "$PRODUCT" --build-path "$BUILD_PATH" --arch "$arch" -Xlinker -rpath -Xlinker @executable_path/../Frameworks
+  openclaw_swift build -c "$BUILD_CONFIG" --product "$PRODUCT" --build-path "$BUILD_PATH" --arch "$arch" -Xlinker -rpath -Xlinker @executable_path/../Frameworks
 done
 
 BIN_PRIMARY="$(bin_for_arch "$PRIMARY_ARCH")"
@@ -192,12 +194,11 @@ if [ -d "$SPARKLE_FRAMEWORK_PRIMARY" ]; then
 fi
 
 echo "📦 Copying Swift 6.2 compatibility libraries"
-SWIFT_COMPAT_LIB="$(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-6.2/macosx/libswiftCompatibilitySpan.dylib"
-if [ -f "$SWIFT_COMPAT_LIB" ]; then
-  cp "$SWIFT_COMPAT_LIB" "$APP_ROOT/Contents/Frameworks/"
+if [ -n "${OPENCLAW_SWIFT_COMPAT_LIB_PATH:-}" ] && [ -f "${OPENCLAW_SWIFT_COMPAT_LIB_PATH}" ]; then
+  cp "${OPENCLAW_SWIFT_COMPAT_LIB_PATH}" "$APP_ROOT/Contents/Frameworks/"
   chmod +x "$APP_ROOT/Contents/Frameworks/libswiftCompatibilitySpan.dylib"
 else
-  echo "WARN: Swift compatibility library not found at $SWIFT_COMPAT_LIB (continuing)" >&2
+  echo "WARN: Swift compatibility library not found for DEVELOPER_DIR=${OPENCLAW_SWIFT_DEVELOPER_DIR} (continuing)" >&2
 fi
 
 echo "🖼  Copying app icon"

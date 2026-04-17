@@ -29,6 +29,7 @@ export const zh_CN: TranslationMap = {
     instances: "实例",
     sessions: "会话",
     usage: "使用情况",
+    tasks: "实时任务",
     cron: "定时任务",
     skills: "技能",
     nodes: "节点",
@@ -44,11 +45,12 @@ export const zh_CN: TranslationMap = {
     instances: "来自已连接客户端和节点的在线信号。",
     sessions: "检查活动会话并调整每个会话的默认设置。",
     usage: "监控 API 使用情况和成本。",
+    tasks: "查看 n8n 工作流运行情况和每个步骤的桥接状态。",
     cron: "安排唤醒和重复的代理运行。",
     skills: "管理技能可用性和 API 密钥注入。",
     nodes: "配对设备、功能和命令公开。",
     chat: "用于快速干预的直接网关聊天会话。",
-    config: "安全地编辑 ~/.openclaw/openclaw.json。",
+    config: "安全地编辑网关配置。",
     debug: "网关快照、事件和手动 RPC 调用。",
     logs: "网关文件日志的实时追踪。",
   },
@@ -58,6 +60,8 @@ export const zh_CN: TranslationMap = {
       subtitle: "仪表板连接的位置及其身份验证方式。",
       wsUrl: "WebSocket URL",
       token: "网关令牌",
+      tokenHint:
+        "这里粘贴真实 token，不要粘贴 CLI 命令。必要时可使用桌面 CLI 生成的带 token 链接。",
       password: "密码 (不存储)",
       sessionKey: "默认会话密钥",
       language: "语言",
@@ -97,8 +101,7 @@ export const zh_CN: TranslationMap = {
     },
     pairing: {
       hint: "此设备需要网关主机的配对批准。",
-      mobileHint:
-        "在手机上？从桌面运行 openclaw dashboard --no-open 复制完整 URL（包括 #token=...）。",
+      mobileHint: "在手机上？从主力电脑的桌面 CLI 复制完整 URL（包括 #token=...）。",
     },
     insecure: {
       hint: "此页面为 HTTP，因此浏览器阻止设备标识。请使用 HTTPS (Tailscale Serve) 或在网关主机上打开 {url}。",

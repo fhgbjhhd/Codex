@@ -4,8 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import { afterAll, afterEach, beforeAll, beforeEach, vi } from "vitest";
 import { resetInboundDedupe } from "../auto-reply/reply/inbound-dedupe.js";
-import * as ssrf from "../infra/net/ssrf.js";
 import { resetLogger, setLoggerOverride } from "../logging.js";
+import { mockPinnedHostnameResolution } from "../test-helpers/ssrf.js";
 import type { WebInboundMessage, WebListenerCloseReason } from "./inbound.js";
 import {
   resetBaileysMocks as _resetBaileysMocks,
@@ -27,7 +27,9 @@ type MockWebListener = {
   sendComposingTo: () => Promise<void>;
 };
 
-export const TEST_NET_IP = "203.0.113.10";
+// Use a public, non-special-use address so SSRF guard tests can pin DNS
+// without tripping the resolved-address blocker.
+export const TEST_NET_IP = "93.184.216.34";
 
 vi.mock("../agents/pi-embedded.js", () => ({
   abortEmbeddedPiRun: vi.fn().mockReturnValue(false),
@@ -132,18 +134,8 @@ export function installWebAutoReplyUnitTestHooks(opts?: { pinDns?: boolean }) {
     _resetBaileysMocks();
     _resetLoadConfigMock();
     if (opts?.pinDns) {
-      resolvePinnedHostnameSpy = vi
-        .spyOn(ssrf, "resolvePinnedHostname")
-        .mockImplementation(async (hostname) => {
-          // SSRF guard pins DNS; stub resolution to avoid live lookups in unit tests.
-          const normalized = hostname.trim().toLowerCase().replace(/\.$/, "");
-          const addresses = [TEST_NET_IP];
-          return {
-            hostname: normalized,
-            addresses,
-            lookup: ssrf.createPinnedLookup({ hostname: normalized, addresses }),
-          };
-        });
+      // SSRF guard pins DNS; stub both resolver entrypoints to avoid live lookups in unit tests.
+      resolvePinnedHostnameSpy = mockPinnedHostnameResolution([TEST_NET_IP]);
     }
   });
 

@@ -64,7 +64,12 @@ describe("update-startup", () => {
     vi.setSystemTime(new Date("2026-01-17T10:00:00Z"));
     tempDir = path.join(suiteRoot, `case-${++suiteCase}`);
     await fs.mkdir(tempDir);
-    envSnapshot = captureEnv(["OPENCLAW_STATE_DIR", "NODE_ENV", "VITEST"]);
+    envSnapshot = captureEnv([
+      "OPENCLAW_STATE_DIR",
+      "NODE_ENV",
+      "VITEST",
+      "OPENCLAW_DISABLE_UPDATE_CHECKS",
+    ]);
     process.env.OPENCLAW_STATE_DIR = tempDir;
 
     process.env.NODE_ENV = "test";
@@ -262,6 +267,22 @@ describe("update-startup", () => {
     await expect(fs.stat(path.join(tempDir, "update-check.json"))).rejects.toThrow();
   });
 
+  it("skips update check when disabled by env override", async () => {
+    process.env.OPENCLAW_DISABLE_UPDATE_CHECKS = "1";
+    const onUpdateAvailableChange = vi.fn();
+
+    await runGatewayUpdateCheck({
+      cfg: { update: { channel: "stable" } },
+      log: { info: vi.fn() },
+      isNixMode: false,
+      allowInTests: true,
+      onUpdateAvailableChange,
+    });
+
+    expect(vi.mocked(checkUpdateStatus)).not.toHaveBeenCalled();
+    expect(getUpdateAvailable()).toBeNull();
+  });
+
   it("defers stable auto-update until rollout window is due", async () => {
     mockPackageUpdateStatus("latest", "2.0.0");
 
@@ -334,7 +355,7 @@ describe("update-startup", () => {
     });
   });
 
-  it("runs auto-update when checkOnStart is false but auto-update is enabled", async () => {
+  it("keeps auto-update quiet when checkOnStart is false", async () => {
     mockPackageUpdateStatus("beta", "2.0.0-beta.1");
     const runAutoUpdate = createAutoUpdateSuccessMock();
 
@@ -355,7 +376,8 @@ describe("update-startup", () => {
       runAutoUpdate,
     });
 
-    expect(runAutoUpdate).toHaveBeenCalledTimes(1);
+    expect(runAutoUpdate).not.toHaveBeenCalled();
+    expect(getUpdateAvailable()).toBeNull();
   });
 
   it("uses current runtime + entrypoint for default auto-update command execution", async () => {

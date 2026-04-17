@@ -502,6 +502,7 @@ export async function addCronJob(state: CronState) {
   state.cronError = null;
   try {
     const form = normalizeCronFormState(state.cronForm);
+    const normalizedUnsupportedDelivery = form !== state.cronForm;
     if (form !== state.cronForm) {
       state.cronForm = form;
     }
@@ -550,7 +551,11 @@ export async function addCronJob(state: CronState) {
       clearCronEditState(state);
     } else {
       await state.client.request("cron.add", job);
-      resetCronFormToDefaults(state);
+      if (normalizedUnsupportedDelivery) {
+        state.cronFieldErrors = validateCronForm(state.cronForm);
+      } else {
+        resetCronFormToDefaults(state);
+      }
     }
     await loadCronJobs(state);
     await loadCronStatus(state);

@@ -3,6 +3,7 @@ import path from "node:path";
 import { runCommandWithTimeout } from "../process/exec.js";
 import { fetchWithTimeout } from "../utils/fetch-timeout.js";
 import { detectPackageManager as detectPackageManagerImpl } from "./detect-package-manager.js";
+import { getRedisJson, setRedisJson } from "./redis-cache.js";
 import { channelToNpmTag, type UpdateChannel } from "./update-channels.js";
 
 export type PackageManager = "pnpm" | "bun" | "npm" | "unknown";
@@ -39,6 +40,10 @@ export type NpmTagStatus = {
   error?: string;
 };
 
+type CachedNpmTagStatus = NpmTagStatus & {
+  cachedAtMs: number;
+};
+
 export type UpdateCheckResult = {
   root: string | null;
   installKind: "git" | "package" | "unknown";
@@ -47,6 +52,8 @@ export type UpdateCheckResult = {
   deps?: DepsStatus;
   registry?: RegistryStatus;
 };
+
+const NPM_TAG_CACHE_TTL_MS = 5 * 60_000;
 
 export function formatGitInstallLabel(update: UpdateCheckResult): string | null {
   if (update.installKind !== "git") {
@@ -299,6 +306,20 @@ export async function fetchNpmTagVersion(params: {
 }): Promise<NpmTagStatus> {
   const timeoutMs = params?.timeoutMs ?? 3500;
   const tag = params.tag;
+  const cacheKey = `update:npm-tag:${tag}`;
+  const cached = await getRedisJson<CachedNpmTagStatus>(cacheKey);
+  if (
+    cached?.tag === tag &&
+    typeof cached.cachedAtMs === "number" &&
+    Date.now() - cached.cachedAtMs < NPM_TAG_CACHE_TTL_MS
+  ) {
+    return {
+      tag: cached.tag,
+      version: cached.version,
+      error: cached.error,
+    };
+  }
+  let result: NpmTagStatus;
   try {
     const res = await fetchWithTimeout(
       `https://registry.npmjs.org/openclaw/${encodeURIComponent(tag)}`,
@@ -306,14 +327,24 @@ export async function fetchNpmTagVersion(params: {
       Math.max(250, timeoutMs),
     );
     if (!res.ok) {
-      return { tag, version: null, error: `HTTP ${res.status}` };
+      result = { tag, version: null, error: `HTTP ${res.status}` };
+    } else {
+      const json = (await res.json()) as { version?: unknown };
+      const version = typeof json?.version === "string" ? json.version : null;
+      result = { tag, version };
     }
-    const json = (await res.json()) as { version?: unknown };
-    const version = typeof json?.version === "string" ? json.version : null;
-    return { tag, version };
   } catch (err) {
-    return { tag, version: null, error: String(err) };
+    result = { tag, version: null, error: String(err) };
   }
+  await setRedisJson(
+    cacheKey,
+    {
+      ...result,
+      cachedAtMs: Date.now(),
+    } satisfies CachedNpmTagStatus,
+    NPM_TAG_CACHE_TTL_MS,
+  );
+  return result;
 }
 
 export async function resolveNpmChannelTag(params: {

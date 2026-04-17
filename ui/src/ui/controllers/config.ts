@@ -1,4 +1,4 @@
-import type { GatewayBrowserClient } from "../gateway.ts";
+import { GatewayRequestError, type GatewayBrowserClient } from "../gateway.ts";
 import type { ConfigSchemaResponse, ConfigSnapshot, ConfigUiHints } from "../types.ts";
 import type { JsonSchema } from "../views/config-form.shared.ts";
 import { coerceFormValues } from "./config/form-coerce.ts";
@@ -8,6 +8,8 @@ import {
   serializeConfigForm,
   setPathValue,
 } from "./config/form-utils.ts";
+
+const UPDATE_RUN_MIN_INTERVAL_MS = 10_000;
 
 export type ConfigState = {
   client: GatewayBrowserClient | null;
@@ -21,6 +23,8 @@ export type ConfigState = {
   configSaving: boolean;
   configApplying: boolean;
   updateRunning: boolean;
+  updateRetryUntilMs: number | null;
+  updateRetryTimer: number | null;
   configSnapshot: ConfigSnapshot | null;
   configSchema: unknown;
   configSchemaVersion: string | null;
@@ -181,17 +185,79 @@ export async function runUpdate(state: ConfigState) {
   if (!state.client || !state.connected) {
     return;
   }
+  if (state.updateRetryUntilMs && state.updateRetryUntilMs > Date.now()) {
+    const retryInSeconds = Math.max(1, Math.ceil((state.updateRetryUntilMs - Date.now()) / 1000));
+    state.lastError = `Update cooling down. Retry in ${retryInSeconds}s.`;
+    return;
+  }
   state.updateRunning = true;
   state.lastError = null;
   try {
-    await state.client.request("update.run", {
+    const response = await state.client.request<{
+      result?: { status?: string; reason?: string };
+    }>("update.run", {
       sessionKey: state.applySessionKey,
     });
+    const status = response?.result?.status;
+    const reason = response?.result?.reason;
+    if (status === "skipped" && reason === "dirty") {
+      state.lastError =
+        "Update skipped: the running checkout has local changes. Clean the worktree or use the package-manager upgrade path.";
+    } else if (status === "skipped") {
+      state.lastError = `Update skipped: ${reason ?? "preflight conditions were not met"}.`;
+    } else if (status === "error") {
+      state.lastError = `Update failed: ${reason ?? "unknown error"}.`;
+    } else {
+      scheduleUpdateCooldown(state, UPDATE_RUN_MIN_INTERVAL_MS);
+    }
+    if (status === "skipped" || status === "error") {
+      scheduleUpdateCooldown(state, UPDATE_RUN_MIN_INTERVAL_MS);
+    }
   } catch (err) {
-    state.lastError = String(err);
+    if (err instanceof GatewayRequestError) {
+      const retryAfterMs = extractRetryAfterMs(err.details);
+      if (retryAfterMs != null) {
+        scheduleUpdateCooldown(state, Math.max(retryAfterMs, UPDATE_RUN_MIN_INTERVAL_MS));
+        state.lastError = `Update rate-limited by gateway control-plane budget. Retry in ${Math.ceil(retryAfterMs / 1000)}s.`;
+      } else {
+        scheduleUpdateCooldown(state, UPDATE_RUN_MIN_INTERVAL_MS);
+        state.lastError = err.message;
+      }
+    } else {
+      scheduleUpdateCooldown(state, UPDATE_RUN_MIN_INTERVAL_MS);
+      state.lastError = String(err);
+    }
   } finally {
     state.updateRunning = false;
   }
+}
+
+function scheduleUpdateCooldown(state: ConfigState, delayMs: number) {
+  const nextRetryUntilMs = Date.now() + Math.max(0, Math.floor(delayMs));
+  if (state.updateRetryUntilMs && state.updateRetryUntilMs >= nextRetryUntilMs) {
+    return;
+  }
+  state.updateRetryUntilMs = nextRetryUntilMs;
+  if (state.updateRetryTimer !== null) {
+    clearTimeout(state.updateRetryTimer);
+  }
+  state.updateRetryTimer = window.setTimeout(
+    () => {
+      state.updateRetryUntilMs = null;
+      state.updateRetryTimer = null;
+    },
+    Math.max(0, nextRetryUntilMs - Date.now()) + 50,
+  );
+}
+
+function extractRetryAfterMs(details: unknown): number | null {
+  if (!details || typeof details !== "object" || Array.isArray(details)) {
+    return null;
+  }
+  const retryAfterMs = (details as { retryAfterMs?: unknown }).retryAfterMs;
+  return typeof retryAfterMs === "number" && Number.isFinite(retryAfterMs) && retryAfterMs > 0
+    ? retryAfterMs
+    : null;
 }
 
 export function updateConfigFormValue(

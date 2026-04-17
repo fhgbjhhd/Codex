@@ -30,6 +30,8 @@ import type {
   HealthSnapshot,
   LogEntry,
   LogLevel,
+  N8nBridgeStatus,
+  N8nTaskRun,
   NostrProfile,
   PresenceEntry,
   SessionsUsageResult,
@@ -107,6 +109,8 @@ export type AppViewState = {
   configSaving: boolean;
   configApplying: boolean;
   updateRunning: boolean;
+  updateRetryUntilMs: number | null;
+  updateRetryTimer: number | null;
   applySessionKey: string;
   configSnapshot: ConfigSnapshot | null;
   configSchema: unknown;
@@ -229,6 +233,14 @@ export type AppViewState = {
   cronRunsSortDir: CronSortDir;
   cronModelSuggestions: string[];
   cronBusy: boolean;
+  cyberFlowUrl: string;
+  cyberFlowRegion: "US" | "MX" | "ME";
+  cyberFlowRunState: "idle" | "arming" | "review";
+  n8nLoading: boolean;
+  n8nTriggering: boolean;
+  n8nStatus: N8nBridgeStatus | null;
+  n8nRuns: N8nTaskRun[];
+  n8nError: string | null;
   skillsLoading: boolean;
   skillsReport: SkillStatusReport | null;
   skillsError: string | null;
@@ -266,8 +278,10 @@ export type AppViewState = {
   setTheme: (theme: ThemeMode, context?: ThemeTransitionContext) => void;
   applySettings: (next: UiSettings) => void;
   loadOverview: () => Promise<void>;
+  loadN8n: () => Promise<void>;
   loadAssistantIdentity: () => Promise<void>;
   loadCron: () => Promise<void>;
+  triggerN8nResearchIngest: () => Promise<void>;
   handleWhatsAppStart: (force: boolean) => Promise<void>;
   handleWhatsAppWait: () => Promise<void>;
   handleWhatsAppLogout: () => Promise<void>;

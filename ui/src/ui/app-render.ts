@@ -79,6 +79,7 @@ import { renderNodes } from "./views/nodes.ts";
 import { renderOverview } from "./views/overview.ts";
 import { renderSessions } from "./views/sessions.ts";
 import { renderSkills } from "./views/skills.ts";
+import { renderTasks } from "./views/tasks.ts";
 
 const AVATAR_DATA_RE = /^data:/i;
 const AVATAR_HTTP_RE = /^https?:\/\//i;
@@ -233,11 +234,11 @@ export function renderApp(state: AppViewState) {
           </button>
           <div class="brand">
             <div class="brand-logo">
-              <img src=${basePath ? `${basePath}/favicon.svg` : "/favicon.svg"} alt="OpenClaw" />
+              <img src=${basePath ? `${basePath}/favicon.svg` : "/favicon.svg"} alt="CyberFlow AI" />
             </div>
             <div class="brand-text">
-              <div class="brand-title">OPENCLAW</div>
-              <div class="brand-sub">Gateway Dashboard</div>
+              <div class="brand-title">CYBERFLOW AI</div>
+              <div class="brand-sub">Black-Gold Command Console</div>
             </div>
           </div>
         </div>
@@ -354,6 +355,31 @@ export function renderApp(state: AppViewState) {
                 },
                 onConnect: () => state.connect(),
                 onRefresh: () => state.loadOverview(),
+                cyberFlowUrl: state.cyberFlowUrl,
+                cyberFlowRegion: state.cyberFlowRegion,
+                cyberFlowRunState: state.cyberFlowRunState,
+                onCyberFlowUrlChange: (next) => {
+                  state.cyberFlowUrl = next;
+                  state.cyberFlowRunState = "idle";
+                },
+                onCyberFlowRegionChange: (next) => {
+                  state.cyberFlowRegion = next;
+                  state.cyberFlowRunState = "idle";
+                },
+                onCyberFlowExecute: () => void state.triggerN8nResearchIngest(),
+              })
+            : nothing
+        }
+
+        ${
+          state.tab === "tasks"
+            ? renderTasks({
+                loading: state.n8nLoading,
+                triggering: state.n8nTriggering,
+                status: state.n8nStatus,
+                runs: state.n8nRuns,
+                error: state.n8nError,
+                onRefresh: () => void state.loadN8n(),
               })
             : nothing
         }
@@ -1062,6 +1088,7 @@ export function renderApp(state: AppViewState) {
                 saving: state.configSaving,
                 applying: state.configApplying,
                 updating: state.updateRunning,
+                updateRetryUntilMs: state.updateRetryUntilMs,
                 connected: state.connected,
                 schema: state.configSchema,
                 schemaLoading: state.configSchemaLoading,

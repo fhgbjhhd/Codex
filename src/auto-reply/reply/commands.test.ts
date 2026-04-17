@@ -1149,6 +1149,55 @@ describe("handleCommands subagents", () => {
     }
   });
 
+  it("loads battle report lines from the routed agent workspace for /status", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "openclaw-status-scout-"));
+    const scoutWorkspace = path.join(root, "scout");
+    await fs.mkdir(scoutWorkspace, { recursive: true });
+    await fs.writeFile(
+      path.join(scoutWorkspace, "MEMORY.md"),
+      [
+        "# MEMORY.md",
+        "",
+        "## Battle Report",
+        "Battle: 155 qualified prospects and 12 whale accounts are in the active queue.",
+        "Markets: US, MX, and ME are live.",
+        "Next move: qualify whales first, then route copy packets to Creator.",
+        "",
+      ].join("\n"),
+      "utf-8",
+    );
+    const cfg = {
+      commands: { text: true },
+      channels: { whatsapp: { allowFrom: ["*"] } },
+      agents: {
+        list: [
+          { id: "main", default: true, workspace: testWorkspaceDir },
+          { id: "scout", workspace: scoutWorkspace, identity: { name: "Scout" } },
+        ],
+      },
+      session: { mainKey: "main", scope: "per-sender" },
+    } as OpenClawConfig;
+    const params = buildParams("/status", cfg, {
+      Provider: "telegram",
+      Surface: "telegram",
+    });
+    params.sessionKey = "agent:scout:telegram:direct:123";
+
+    try {
+      const result = await handleCommands(params);
+      expect(result.shouldContinue).toBe(false);
+      expect(result.reply?.text).toContain(
+        "Battle: 155 qualified prospects and 12 whale accounts are in the active queue.",
+      );
+      expect(result.reply?.text).toContain("Markets: US, MX, and ME are live.");
+      expect(result.reply?.text).toContain(
+        "Next move: qualify whales first, then route copy packets to Creator.",
+      );
+    } finally {
+      await fs.rm(root, { recursive: true, force: true });
+    }
+  });
+
   it("returns help/usage for invalid or incomplete subagents commands", async () => {
     const cfg = {
       commands: { text: true },

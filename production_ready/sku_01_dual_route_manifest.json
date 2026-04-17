@@ -1,0 +1,78 @@
+{
+  "status": "production_ready",
+  "mode": "dual-route",
+  "source": "/Users/mac/.openclaw/workspace/products/sku_01_final.md",
+  "output": "/Users/mac/openclaw/production_ready/sku_01_dual_route_formal.md",
+  "sections": 13,
+  "promptCount": 520,
+  "deepseekModel": "deepseek-chat",
+  "polishModel": "gpt-4o",
+  "generatedAt": "2026-04-07T19:02:45.302Z",
+  "sectionMetrics": [
+    {
+      "section": "Inbox Zero Automation",
+      "styleScore": 92,
+      "logicScore": 95
+    },
+    {
+      "section": "Meeting Notes Compression",
+      "styleScore": 85,
+      "logicScore": 90
+    },
+    {
+      "section": "Proposal Drafting",
+      "styleScore": 92,
+      "logicScore": 95
+    },
+    {
+      "section": "Client Follow-up Systems",
+      "styleScore": 85,
+      "logicScore": 90
+    },
+    {
+      "section": "Offer Packaging",
+      "styleScore": 92,
+      "logicScore": 95
+    },
+    {
+      "section": "Short Video Scripting",
+      "styleScore": 90,
+      "logicScore": 95
+    },
+    {
+      "section": "Sales Copy Iteration",
+      "styleScore": 92,
+      "logicScore": 95
+    },
+    {
+      "section": "Lead Qualification",
+      "styleScore": 92,
+      "logicScore": 95
+    },
+    {
+      "section": "Research Compression",
+      "styleScore": 85,
+      "logicScore": 90
+    },
+    {
+      "section": "Standard Operating Procedures",
+      "styleScore": 85,
+      "logicScore": 90
+    },
+    {
+      "section": "Content Repurposing",
+      "styleScore": 92,
+      "logicScore": 95
+    },
+    {
+      "section": "Personal Productivity",
+      "styleScore": 85,
+      "logicScore": 90
+    },
+    {
+      "section": "Ecommerce Ops Automation",
+      "styleScore": 92,
+      "logicScore": 95
+    }
+  ]
+}

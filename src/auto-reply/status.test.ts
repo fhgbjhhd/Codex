@@ -417,6 +417,28 @@ describe("buildStatusMessage", () => {
     expect(lines[contextIndex + 1]).toContain("Usage: Claude 80% left (5h)");
   });
 
+  it("inserts briefing lines beneath usage summary", () => {
+    const text = buildStatusMessage({
+      agent: { model: "anthropic/claude-opus-4-5", contextTokens: 32_000 },
+      sessionEntry: { sessionId: "briefing-1", updatedAt: 0, totalTokens: 1000 },
+      sessionKey: "agent:scout:telegram:dm:123",
+      sessionScope: "per-sender",
+      queue: { mode: "collect", depth: 0 },
+      usageLine: "📊 Usage: steady",
+      briefingLines: [
+        "Battle: 155 qualified prospects · 12 whale accounts",
+        "Routing: Telegram -> Scout · Creator on standby",
+      ],
+      modelAuth: "api-key",
+    });
+
+    const lines = normalizeTestText(text).split("\n");
+    const usageIndex = lines.findIndex((line) => line.includes("Usage: steady"));
+    expect(usageIndex).toBeGreaterThan(-1);
+    expect(lines[usageIndex + 1]).toContain("Battle: 155 qualified prospects");
+    expect(lines[usageIndex + 2]).toContain("Routing: Telegram -> Scout");
+  });
+
   it("hides cost when not using an API key", () => {
     const text = buildStatusMessage({
       config: {

@@ -2,13 +2,13 @@ import { t } from "../i18n/index.ts";
 import type { IconName } from "./icons.js";
 
 export const TAB_GROUPS = [
-  { label: "chat", tabs: ["chat"] },
+  { label: "Chat", tabs: ["chat"] },
   {
-    label: "control",
-    tabs: ["overview", "channels", "instances", "sessions", "usage", "cron"],
+    label: "Control",
+    tabs: ["overview", "tasks", "channels", "instances", "sessions", "usage", "cron"],
   },
-  { label: "agent", tabs: ["agents", "skills", "nodes"] },
-  { label: "settings", tabs: ["config", "debug", "logs"] },
+  { label: "Agent", tabs: ["agents", "skills", "nodes"] },
+  { label: "Settings", tabs: ["config", "debug", "logs"] },
 ] as const;
 
 export type Tab =
@@ -18,6 +18,7 @@ export type Tab =
   | "instances"
   | "sessions"
   | "usage"
+  | "tasks"
   | "cron"
   | "skills"
   | "nodes"
@@ -33,6 +34,7 @@ const TAB_PATHS: Record<Tab, string> = {
   instances: "/instances",
   sessions: "/sessions",
   usage: "/usage",
+  tasks: "/tasks",
   cron: "/cron",
   skills: "/skills",
   nodes: "/nodes",
@@ -139,6 +141,8 @@ export function iconForTab(tab: Tab): IconName {
       return "fileText";
     case "usage":
       return "barChart";
+    case "tasks":
+      return "loader";
     case "cron":
       return "loader";
     case "skills":

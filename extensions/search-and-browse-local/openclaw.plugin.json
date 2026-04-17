@@ -1,0 +1,61 @@
+{
+  "id": "search-and-browse-local",
+  "name": "Search And Browse Local",
+  "description": "Local Chrome CDP browser extraction for X pages and rendered web content.",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "chromeHost": {
+        "type": "string"
+      },
+      "chromePort": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 65535
+      },
+      "serverPort": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 65535
+      },
+      "defaultHandle": {
+        "type": "string"
+      },
+      "defaultWaitMs": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 120000
+      },
+      "defaultMaxChars": {
+        "type": "integer",
+        "minimum": 100,
+        "maximum": 500000
+      }
+    }
+  },
+  "uiHints": {
+    "chromeHost": {
+      "label": "Chrome Host",
+      "placeholder": "127.0.0.1"
+    },
+    "chromePort": {
+      "label": "Chrome Debug Port",
+      "placeholder": "9222"
+    },
+    "serverPort": {
+      "label": "Local API Port",
+      "placeholder": "8787"
+    },
+    "defaultHandle": {
+      "label": "Default X Handle",
+      "placeholder": "dankoe"
+    },
+    "defaultWaitMs": {
+      "label": "Default Wait (ms)"
+    },
+    "defaultMaxChars": {
+      "label": "Default Max Chars"
+    }
+  }
+}

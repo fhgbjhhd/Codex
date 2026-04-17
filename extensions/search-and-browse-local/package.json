@@ -1,0 +1,11 @@
+{
+  "name": "@openclaw/search-and-browse-local",
+  "version": "2026.4.3",
+  "description": "Local Chrome CDP search and browse tool for OpenClaw",
+  "type": "module",
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ]
+  }
+}

@@ -83,6 +83,7 @@ type StatusArgs = {
   modelAuth?: string;
   activeModelAuth?: string;
   usageLine?: string;
+  briefingLines?: string[];
   timeLine?: string;
   queue?: QueueStatus;
   mediaDecisions?: ReadonlyArray<MediaUnderstandingDecision>;
@@ -673,6 +674,7 @@ export function buildStatusMessage(args: StatusArgs): string {
     `📚 ${contextLine}`,
     mediaLine,
     args.usageLine,
+    ...(args.briefingLines ?? []),
     `🧵 ${sessionLine}`,
     args.subagentsLine,
     `⚙️ ${optionsLine}`,

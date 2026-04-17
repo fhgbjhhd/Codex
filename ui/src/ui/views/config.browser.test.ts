@@ -12,6 +12,7 @@ describe("config view", () => {
     saving: false,
     applying: false,
     updating: false,
+    updateRetryUntilMs: null,
     connected: true,
     schema: {
       type: "object",

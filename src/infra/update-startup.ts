@@ -6,6 +6,7 @@ import type { loadConfig } from "../config/config.js";
 import { resolveStateDir } from "../config/paths.js";
 import { runCommandWithTimeout } from "../process/exec.js";
 import { VERSION } from "../version.js";
+import { isTruthyEnvValue } from "./env.js";
 import { resolveOpenClawPackageRoot } from "./openclaw-root.js";
 import { normalizeUpdateChannel, DEFAULT_PACKAGE_CHANNEL } from "./update-channels.js";
 import { compareSemverStrings, resolveNpmChannelTag, checkUpdateStatus } from "./update-check.js";
@@ -57,6 +58,16 @@ export function resetUpdateAvailableStateForTest(): void {
   updateAvailableCache = null;
 }
 
+function clearUpdateAvailable(params: {
+  onUpdateAvailableChange?: (updateAvailable: UpdateAvailable | null) => void;
+}): void {
+  if (updateAvailableCache === null) {
+    return;
+  }
+  updateAvailableCache = null;
+  params.onUpdateAvailableChange?.(null);
+}
+
 const UPDATE_CHECK_FILENAME = "update-check.json";
 const UPDATE_CHECK_INTERVAL_MS = 24 * 60 * 60 * 1000;
 const ONE_HOUR_MS = 60 * 60 * 1000;
@@ -73,6 +84,13 @@ function shouldSkipCheck(allowInTests: boolean): boolean {
     return true;
   }
   return false;
+}
+
+export function areGatewayUpdateChecksEnabled(cfg: ReturnType<typeof loadConfig>): boolean {
+  if (isTruthyEnvValue(process.env.OPENCLAW_DISABLE_UPDATE_CHECKS)) {
+    return false;
+  }
+  return cfg.update?.checkOnStart !== false;
 }
 
 function resolveAutoUpdatePolicy(cfg: ReturnType<typeof loadConfig>): AutoUpdatePolicy {
@@ -315,28 +333,21 @@ export async function runGatewayUpdateCheck(params: {
   if (params.isNixMode) {
     return;
   }
-  const auto = resolveAutoUpdatePolicy(params.cfg);
-  const shouldRunUpdateHints = params.cfg.update?.checkOnStart !== false;
-  if (!shouldRunUpdateHints && !auto.enabled) {
+  if (!areGatewayUpdateChecksEnabled(params.cfg)) {
+    clearUpdateAvailable(params);
     return;
   }
+  const auto = resolveAutoUpdatePolicy(params.cfg);
 
   const statePath = path.join(resolveStateDir(), UPDATE_CHECK_FILENAME);
   const state = await readState(statePath);
   const now = Date.now();
   const lastCheckedAt = state.lastCheckedAt ? Date.parse(state.lastCheckedAt) : null;
-  if (shouldRunUpdateHints) {
-    const persistedAvailable = resolvePersistedUpdateAvailable(state);
-    setUpdateAvailableCache({
-      next: persistedAvailable,
-      onUpdateAvailableChange: params.onUpdateAvailableChange,
-    });
-  } else {
-    setUpdateAvailableCache({
-      next: null,
-      onUpdateAvailableChange: params.onUpdateAvailableChange,
-    });
-  }
+  const persistedAvailable = resolvePersistedUpdateAvailable(state);
+  setUpdateAvailableCache({
+    next: persistedAvailable,
+    onUpdateAvailableChange: params.onUpdateAvailableChange,
+  });
   const checkIntervalMs = resolveCheckIntervalMs(params.cfg);
   if (lastCheckedAt && Number.isFinite(lastCheckedAt)) {
     if (now - lastCheckedAt < checkIntervalMs) {
@@ -388,17 +399,15 @@ export async function runGatewayUpdateCheck(params: {
       latestVersion: resolved.version,
       channel: tag,
     };
-    if (shouldRunUpdateHints) {
-      setUpdateAvailableCache({
-        next: nextAvailable,
-        onUpdateAvailableChange: params.onUpdateAvailableChange,
-      });
-    }
+    setUpdateAvailableCache({
+      next: nextAvailable,
+      onUpdateAvailableChange: params.onUpdateAvailableChange,
+    });
     nextState.lastAvailableVersion = resolved.version;
     nextState.lastAvailableTag = tag;
     const shouldNotify =
       state.lastNotifiedVersion !== resolved.version || state.lastNotifiedTag !== tag;
-    if (shouldRunUpdateHints && shouldNotify) {
+    if (shouldNotify) {
       params.log.info(
         `update available (${tag}): v${resolved.version} (current v${VERSION}). Run: ${formatCliCommand("openclaw update")}`,
       );
@@ -490,6 +499,10 @@ export function scheduleGatewayUpdateCheck(params: {
   isNixMode: boolean;
   onUpdateAvailableChange?: (updateAvailable: UpdateAvailable | null) => void;
 }): () => void {
+  if (!areGatewayUpdateChecksEnabled(params.cfg)) {
+    clearUpdateAvailable(params);
+    return () => {};
+  }
   let stopped = false;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let running = false;

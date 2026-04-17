@@ -1,9 +1,11 @@
 import { EnvHttpProxyAgent } from "undici";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { mockPinnedHostnameResolution } from "../../test-helpers/ssrf.js";
 import { withFetchPreconnect } from "../../test-utils/fetch-mock.js";
 import { createWebFetchTool, createWebSearchTool } from "./web-tools.js";
 
 function installMockFetch(payload: unknown) {
+  mockPinnedHostnameResolution();
   const mockFetch = vi.fn((_input?: unknown, _init?: unknown) =>
     Promise.resolve({
       ok: true,
@@ -13,6 +15,10 @@ function installMockFetch(payload: unknown) {
   global.fetch = withFetchPreconnect(mockFetch);
   return mockFetch;
 }
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 function createPerplexitySearchTool(perplexityConfig?: { apiKey?: string; baseUrl?: string }) {
   return createWebSearchTool({
@@ -371,6 +377,7 @@ describe("web_search kimi provider", () => {
         { status: 200, headers: { "content-type": "application/json" } },
       );
     });
+    mockPinnedHostnameResolution();
     global.fetch = withFetchPreconnect(mockFetch);
 
     const tool = createKimiSearchTool({
@@ -423,6 +430,7 @@ describe("web_search external content wrapping", () => {
       } as Response),
     ),
   ) {
+    mockPinnedHostnameResolution();
     global.fetch = withFetchPreconnect(mock);
     return mock;
   }
@@ -439,6 +447,7 @@ describe("web_search external content wrapping", () => {
         json: () => Promise.resolve(payload),
       } as Response),
     );
+    mockPinnedHostnameResolution();
     global.fetch = withFetchPreconnect(mock);
     return mock;
   }

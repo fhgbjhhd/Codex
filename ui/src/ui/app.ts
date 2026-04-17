@@ -57,6 +57,10 @@ import type { CronFieldErrors } from "./controllers/cron.ts";
 import type { DevicePairingList } from "./controllers/devices.ts";
 import type { ExecApprovalRequest } from "./controllers/exec-approval.ts";
 import type { ExecApprovalsFile, ExecApprovalsSnapshot } from "./controllers/exec-approvals.ts";
+import {
+  loadN8n as loadN8nInternal,
+  triggerN8nResearchIngest as triggerN8nResearchIngestInternal,
+} from "./controllers/n8n.ts";
 import type { SkillMessage } from "./controllers/skills.ts";
 import type { GatewayBrowserClient, GatewayHelloOk } from "./gateway.ts";
 import type { Tab } from "./navigation.ts";
@@ -74,6 +78,8 @@ import type {
   HealthSnapshot,
   LogEntry,
   LogLevel,
+  N8nBridgeStatus,
+  N8nTaskRun,
   PresenceEntry,
   ChannelsStatusSnapshot,
   SessionsListResult,
@@ -119,7 +125,7 @@ export class OpenClawApp extends LitElement {
     }
   }
   @state() password = "";
-  @state() tab: Tab = "chat";
+  @state() tab: Tab = "overview";
   @state() onboarding = resolveOnboardingMode();
   @state() connected = false;
   @state() theme: ThemeMode = this.settings.theme ?? "system";
@@ -152,6 +158,9 @@ export class OpenClawApp extends LitElement {
   @state() chatQueue: ChatQueueItem[] = [];
   @state() chatAttachments: ChatAttachment[] = [];
   @state() chatManualRefreshInFlight = false;
+  @state() cyberFlowUrl = "https://x.com/dankoe";
+  @state() cyberFlowRegion: "US" | "MX" | "ME" = "US";
+  @state() cyberFlowRunState: "idle" | "arming" | "review" = "idle";
   // Sidebar state for tool output viewing
   @state() sidebarOpen = false;
   @state() sidebarContent: string | null = null;
@@ -184,6 +193,8 @@ export class OpenClawApp extends LitElement {
   @state() configSaving = false;
   @state() configApplying = false;
   @state() updateRunning = false;
+  @state() updateRetryUntilMs: number | null = null;
+  updateRetryTimer: number | null = null;
   @state() applySessionKey = this.settings.lastActiveSessionKey;
   @state() configSnapshot: ConfigSnapshot | null = null;
   @state() configSchema: unknown = null;
@@ -332,6 +343,11 @@ export class OpenClawApp extends LitElement {
   @state() cronRunsSortDir: import("./types.js").CronSortDir = "desc";
   @state() cronModelSuggestions: string[] = [];
   @state() cronBusy = false;
+  @state() n8nLoading = false;
+  @state() n8nTriggering = false;
+  @state() n8nStatus: N8nBridgeStatus | null = null;
+  @state() n8nRuns: N8nTaskRun[] = [];
+  @state() n8nError: string | null = null;
 
   @state() updateAvailable: import("./types.js").UpdateAvailable | null = null;
 
@@ -378,6 +394,7 @@ export class OpenClawApp extends LitElement {
   private nodesPollInterval: number | null = null;
   private logsPollInterval: number | null = null;
   private debugPollInterval: number | null = null;
+  private n8nPollInterval: number | null = null;
   private logsScrollFrame: number | null = null;
   private toolStreamById = new Map<string, ToolStreamEntry>();
   private toolStreamOrder: string[] = [];
@@ -403,6 +420,10 @@ export class OpenClawApp extends LitElement {
   }
 
   disconnectedCallback() {
+    if (this.updateRetryTimer != null) {
+      window.clearTimeout(this.updateRetryTimer);
+      this.updateRetryTimer = null;
+    }
     handleDisconnected(this as unknown as Parameters<typeof handleDisconnected>[0]);
     super.disconnectedCallback();
   }
@@ -413,6 +434,14 @@ export class OpenClawApp extends LitElement {
 
   connect() {
     connectGatewayInternal(this as unknown as Parameters<typeof connectGatewayInternal>[0]);
+  }
+
+  async loadN8n() {
+    await loadN8nInternal(this);
+  }
+
+  async triggerN8nResearchIngest() {
+    await triggerN8nResearchIngestInternal(this);
   }
 
   handleChatScroll(event: Event) {

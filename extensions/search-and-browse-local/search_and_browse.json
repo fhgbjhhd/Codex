@@ -1,0 +1,226 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Search And Browse Local",
+    "version": "1.0.0",
+    "description": "Local OpenAPI bridge for browsing rendered pages through Chrome DevTools on port 9222 and extracting X page content."
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8787"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "operationId": "healthCheck",
+        "summary": "Check whether the local Chrome debug endpoint is reachable",
+        "responses": {
+          "200": {
+            "description": "Chrome status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/browse": {
+      "post": {
+        "operationId": "browsePage",
+        "summary": "Open a rendered page in local Chrome and extract its visible text",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["url"],
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "waitMs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 4000
+                  },
+                  "maxChars": {
+                    "type": "integer",
+                    "minimum": 100,
+                    "default": 30000
+                  },
+                  "includeHtml": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "keepTab": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "chromeHost": {
+                    "type": "string",
+                    "default": "127.0.0.1"
+                  },
+                  "chromePort": {
+                    "type": "integer",
+                    "default": 9222
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rendered page content",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/read-x-profile": {
+      "post": {
+        "operationId": "readXProfile",
+        "summary": "Open an X profile in local Chrome and extract profile content",
+        "requestBody": {
+          "required": false,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "handle": {
+                    "type": "string",
+                    "default": "dankoe"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "waitMs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 4000
+                  },
+                  "maxChars": {
+                    "type": "integer",
+                    "minimum": 100,
+                    "default": 30000
+                  },
+                  "includeHtml": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "keepTab": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "chromeHost": {
+                    "type": "string",
+                    "default": "127.0.0.1"
+                  },
+                  "chromePort": {
+                    "type": "integer",
+                    "default": 9222
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "X profile extraction result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search": {
+      "post": {
+        "operationId": "searchExtractedPageText",
+        "summary": "Search within extracted page text from a rendered page or X profile",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["query"],
+                "properties": {
+                  "query": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "handle": {
+                    "type": "string",
+                    "default": "dankoe"
+                  },
+                  "waitMs": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "default": 4000
+                  },
+                  "maxChars": {
+                    "type": "integer",
+                    "minimum": 100,
+                    "default": 30000
+                  },
+                  "includeHtml": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "keepTab": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "chromeHost": {
+                    "type": "string",
+                    "default": "127.0.0.1"
+                  },
+                  "chromePort": {
+                    "type": "integer",
+                    "default": 9222
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Search matches within extracted page text",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,12 +1,14 @@
 import type { OpenClawApp } from "./app.ts";
 import { loadDebug } from "./controllers/debug.ts";
 import { loadLogs } from "./controllers/logs.ts";
+import { loadN8n } from "./controllers/n8n.ts";
 import { loadNodes } from "./controllers/nodes.ts";
 
 type PollingHost = {
   nodesPollInterval: number | null;
   logsPollInterval: number | null;
   debugPollInterval: number | null;
+  n8nPollInterval: number | null;
   tab: string;
 };
 
@@ -66,4 +68,24 @@ export function stopDebugPolling(host: PollingHost) {
   }
   clearInterval(host.debugPollInterval);
   host.debugPollInterval = null;
+}
+
+export function startN8nPolling(host: PollingHost) {
+  if (host.n8nPollInterval != null) {
+    return;
+  }
+  host.n8nPollInterval = window.setInterval(() => {
+    if (host.tab !== "tasks" && host.tab !== "overview") {
+      return;
+    }
+    void loadN8n(host as unknown as OpenClawApp);
+  }, 4000);
+}
+
+export function stopN8nPolling(host: PollingHost) {
+  if (host.n8nPollInterval == null) {
+    return;
+  }
+  clearInterval(host.n8nPollInterval);
+  host.n8nPollInterval = null;
 }
