@@ -1,3 +1,124 @@
+/* ── Chat Welcome / Empty State ── */
+.chat-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 48px 24px 32px;
+  text-align: center;
+  min-height: 60vh;
+}
+
+.chat-welcome__header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.chat-welcome__logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #d6a64c, #f0ca7a);
+  color: #05070b;
+  font: 800 18px/1 var(--mono);
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+.chat-welcome__title {
+  margin: 0;
+  font: 700 22px/1 var(--mono);
+  color: var(--text-strong);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.chat-welcome__subtitle {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: #f0ca7a;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+
+.chat-welcome__taglines {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chat-welcome__taglines span {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.chat-welcome__taglines span:first-child {
+  color: var(--text);
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.chat-welcome__hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+.chat-welcome__chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+  width: 100%;
+  max-width: 680px;
+}
+
+.chat-welcome__chip {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border: 1px solid rgba(214, 166, 76, 0.18);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(214, 166, 76, 0.06), rgba(255, 255, 255, 0.02));
+  color: color-mix(in srgb, var(--text) 88%, #f4d48b 12%);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.chat-welcome__chip:hover {
+  border-color: rgba(214, 166, 76, 0.42);
+  background: linear-gradient(180deg, rgba(214, 166, 76, 0.14), rgba(214, 166, 76, 0.06));
+  transform: translateY(-2px);
+}
+
+.chat-welcome__chip-icon {
+  flex-shrink: 0;
+  font-size: 16px;
+  line-height: 1.45;
+}
+
+@media (max-width: 600px) {
+  .chat-welcome__chips {
+    grid-template-columns: 1fr;
+  }
+
+  .chat-welcome {
+    padding: 32px 16px 24px;
+  }
+}
+/* ── end Chat Welcome ── */
+
 .cyberflow-console {
   position: relative;
   overflow: hidden;

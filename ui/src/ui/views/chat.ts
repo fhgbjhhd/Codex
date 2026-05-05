@@ -253,8 +253,56 @@ export function renderChat(props: ChatProps) {
   const composePlaceholder = props.connected
     ? hasAttachments
       ? "Add a message or paste more images..."
-      : "Message (↩ to send, Shift+↩ for line breaks, paste images)"
+      : "Ask anything — draft a contract, analyze data, translate documents…"
     : "Connect to the gateway to start chatting…";
+
+  const chatItems = buildChatItems(props);
+  const isEmpty = !props.loading && props.stream === null && chatItems.length === 0;
+
+  const SUGGESTED_PROMPTS = [
+    { icon: "📄", text: "Draft a vendor contract in English and Bahasa Malaysia" },
+    { icon: "📊", text: "Analyze this sales report and highlight growth opportunities" },
+    { icon: "🌐", text: "Translate this compliance document to Malay, flag legal risks" },
+    { icon: "💼", text: "Prepare an executive summary for our Q2 board meeting" },
+    { icon: "📧", text: "Write a follow-up email in Spanish for a LATAM client" },
+    { icon: "🤖", text: "Suggest an AI workflow to automate our reporting process" },
+  ];
+
+  const welcomeScreen = isEmpty
+    ? html`
+        <div class="chat-welcome">
+          <div class="chat-welcome__header">
+            <div class="chat-welcome__logo">CF</div>
+            <div>
+              <h2 class="chat-welcome__title">CyberFlow AI</h2>
+              <p class="chat-welcome__subtitle">Enterprise AI Copilot</p>
+            </div>
+          </div>
+          <div class="chat-welcome__taglines">
+            <span>Your AI Copilot for Enterprise Operations</span>
+            <span>Asistente IA para Operaciones Empresariales</span>
+            <span>Pembantu AI untuk Operasi Perniagaan Anda</span>
+          </div>
+          <p class="chat-welcome__hint">Get started with a suggestion or type your own:</p>
+          <div class="chat-welcome__chips">
+            ${SUGGESTED_PROMPTS.map(
+              (p) => html`
+                <button
+                  class="chat-welcome__chip"
+                  type="button"
+                  @click=${() => {
+                    props.onDraftChange(p.text);
+                  }}
+                >
+                  <span class="chat-welcome__chip-icon">${p.icon}</span>
+                  <span>${p.text}</span>
+                </button>
+              `,
+            )}
+          </div>
+        </div>
+      `
+    : nothing;
 
   const splitRatio = props.splitRatio ?? 0.6;
   const sidebarOpen = Boolean(props.sidebarOpen && props.onCloseSidebar);
@@ -265,6 +313,7 @@ export function renderChat(props: ChatProps) {
       aria-live="polite"
       @scroll=${props.onChatScroll}
     >
+      ${welcomeScreen}
       ${
         props.loading
           ? html`
@@ -273,7 +322,7 @@ export function renderChat(props: ChatProps) {
           : nothing
       }
       ${repeat(
-        buildChatItems(props),
+        chatItems,
         (item) => item.key,
         (item) => {
           if (item.kind === "divider") {
