@@ -466,7 +466,11 @@ async function loadHarvestSqlClient(): Promise<HarvestSqlClient | null> {
     return null;
   }
   try {
-    const { default: factory } = await import("postgres");
+    const pkg = "postgres";
+    const mod = await (import(pkg) as Promise<{
+      default?: (url: string, options?: Record<string, unknown>) => HarvestSqlClient;
+    }>);
+    const factory = mod.default;
     if (typeof factory !== "function") {
       return null;
     }
