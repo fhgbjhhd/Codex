@@ -108,6 +108,13 @@ const XIAOMI_DEFAULT_COST = {
   cacheRead: 0,
   cacheWrite: 0,
 };
+// Pricing per 1M tokens (USD) — mimo-v2.5 standard tier
+const MIMO_V25_COST = {
+  input: 0.4,
+  output: 2.0,
+  cacheRead: 0,
+  cacheWrite: 0,
+};
 
 const MOONSHOT_BASE_URL = "https://api.moonshot.ai/v1";
 const MOONSHOT_DEFAULT_MODEL_ID = "kimi-k2.5";
@@ -737,6 +744,45 @@ export function buildXiaomiProvider(): ProviderConfig {
   };
 }
 
+export function buildMiMoProvider(): ProviderConfig {
+  return {
+    baseUrl: XIAOMI_BASE_URL,
+    api: "anthropic-messages",
+    models: [
+      {
+        // Free open-source flash model
+        id: "mimo-v2-flash",
+        name: "MiMo V2 Flash",
+        reasoning: false,
+        input: ["text"],
+        cost: XIAOMI_DEFAULT_COST,
+        contextWindow: XIAOMI_DEFAULT_CONTEXT_WINDOW,
+        maxTokens: XIAOMI_DEFAULT_MAX_TOKENS,
+      },
+      {
+        // Standard multimodal model ($0.40/$2 per 1M tokens)
+        id: "mimo-v2.5",
+        name: "MiMo V2.5",
+        reasoning: false,
+        input: ["text", "image"],
+        cost: MIMO_V25_COST,
+        contextWindow: XIAOMI_DEFAULT_CONTEXT_WINDOW,
+        maxTokens: XIAOMI_DEFAULT_MAX_TOKENS,
+      },
+      {
+        // Flagship Agent-optimized model
+        id: "mimo-v2.5-pro",
+        name: "MiMo V2.5 Pro",
+        reasoning: true,
+        input: ["text", "image"],
+        cost: MIMO_V25_COST,
+        contextWindow: XIAOMI_DEFAULT_CONTEXT_WINDOW,
+        maxTokens: XIAOMI_DEFAULT_MAX_TOKENS,
+      },
+    ],
+  };
+}
+
 async function buildVeniceProvider(): Promise<ProviderConfig> {
   const models = await discoverVeniceModels();
   return {
@@ -998,7 +1044,7 @@ export async function resolveImplicitProviders(params: {
     resolveEnvApiKeyVarName("xiaomi") ??
     resolveApiKeyFromProfiles({ provider: "xiaomi", store: authStore });
   if (xiaomiKey) {
-    providers.xiaomi = { ...buildXiaomiProvider(), apiKey: xiaomiKey };
+    providers.xiaomi = { ...buildMiMoProvider(), apiKey: xiaomiKey };
   }
 
   const cloudflareProfiles = listProfilesForProvider(authStore, "cloudflare-ai-gateway");
