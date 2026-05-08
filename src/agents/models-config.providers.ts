@@ -131,6 +131,26 @@ const KIMI_CODING_DEFAULT_COST = {
   cacheWrite: 0,
 };
 
+const DEEPSEEK_BASE_URL = "https://api.deepseek.com/v1";
+const DEEPSEEK_DEFAULT_CONTEXT_WINDOW = 128000;
+const DEEPSEEK_DEFAULT_MAX_TOKENS = 8192;
+const DEEPSEEK_DEFAULT_COST = {
+  input: 0,
+  output: 0,
+  cacheRead: 0,
+  cacheWrite: 0,
+};
+
+const ZHIPUAI_BASE_URL = "https://open.bigmodel.cn/api/paas/v4";
+const ZHIPUAI_DEFAULT_CONTEXT_WINDOW = 128000;
+const ZHIPUAI_DEFAULT_MAX_TOKENS = 8192;
+const ZHIPUAI_DEFAULT_COST = {
+  input: 0,
+  output: 0,
+  cacheRead: 0,
+  cacheWrite: 0,
+};
+
 const QWEN_PORTAL_BASE_URL = "https://portal.qwen.ai/v1";
 const QWEN_PORTAL_OAUTH_PLACEHOLDER = "qwen-oauth";
 const QWEN_PORTAL_DEFAULT_CONTEXT_WINDOW = 128000;
@@ -596,25 +616,61 @@ export function buildKimiCodingProvider(): ProviderConfig {
   };
 }
 
+export function buildDeepseekProvider(): ProviderConfig {
+  return {
+    baseUrl: DEEPSEEK_BASE_URL,
+    api: "openai-completions",
+    models: [
+      {
+        id: "deepseek-v4-flash",
+        name: "DeepSeek V4 Flash",
+        reasoning: false,
+        input: ["text"],
+        cost: DEEPSEEK_DEFAULT_COST,
+        contextWindow: DEEPSEEK_DEFAULT_CONTEXT_WINDOW,
+        maxTokens: DEEPSEEK_DEFAULT_MAX_TOKENS,
+      },
+      {
+        id: "deepseek-v4-pro",
+        name: "DeepSeek V4 Pro",
+        reasoning: true,
+        input: ["text"],
+        cost: DEEPSEEK_DEFAULT_COST,
+        contextWindow: DEEPSEEK_DEFAULT_CONTEXT_WINDOW,
+        maxTokens: DEEPSEEK_DEFAULT_MAX_TOKENS,
+      },
+    ],
+  };
+}
+
+export function buildZhipuaiProvider(): ProviderConfig {
+  return {
+    baseUrl: ZHIPUAI_BASE_URL,
+    api: "openai-completions",
+    models: [
+      {
+        id: "glm-5.1",
+        name: "GLM-5.1",
+        reasoning: false,
+        input: ["text", "image"],
+        cost: ZHIPUAI_DEFAULT_COST,
+        contextWindow: ZHIPUAI_DEFAULT_CONTEXT_WINDOW,
+        maxTokens: ZHIPUAI_DEFAULT_MAX_TOKENS,
+      },
+    ],
+  };
+}
+
 function buildQwenPortalProvider(): ProviderConfig {
   return {
     baseUrl: QWEN_PORTAL_BASE_URL,
     api: "openai-completions",
     models: [
       {
-        id: "coder-model",
-        name: "Qwen Coder",
+        id: "qwen3-coder-480b",
+        name: "Qwen3 Coder 480B",
         reasoning: false,
         input: ["text"],
-        cost: QWEN_PORTAL_DEFAULT_COST,
-        contextWindow: QWEN_PORTAL_DEFAULT_CONTEXT_WINDOW,
-        maxTokens: QWEN_PORTAL_DEFAULT_MAX_TOKENS,
-      },
-      {
-        id: "vision-model",
-        name: "Qwen Vision",
-        reasoning: false,
-        input: ["text", "image"],
         cost: QWEN_PORTAL_DEFAULT_COST,
         contextWindow: QWEN_PORTAL_DEFAULT_CONTEXT_WINDOW,
         maxTokens: QWEN_PORTAL_DEFAULT_MAX_TOKENS,
@@ -850,6 +906,20 @@ export async function resolveImplicitProviders(params: {
   const authStore = ensureAuthProfileStore(params.agentDir, {
     allowKeychainPrompt: false,
   });
+
+  const deepseekKey =
+    resolveEnvApiKeyVarName("deepseek") ??
+    resolveApiKeyFromProfiles({ provider: "deepseek", store: authStore });
+  if (deepseekKey) {
+    providers.deepseek = { ...buildDeepseekProvider(), apiKey: deepseekKey };
+  }
+
+  const zhipuaiKey =
+    resolveEnvApiKeyVarName("zhipuai") ??
+    resolveApiKeyFromProfiles({ provider: "zhipuai", store: authStore });
+  if (zhipuaiKey) {
+    providers.zhipuai = { ...buildZhipuaiProvider(), apiKey: zhipuaiKey };
+  }
 
   const minimaxKey =
     resolveEnvApiKeyVarName("minimax") ??
