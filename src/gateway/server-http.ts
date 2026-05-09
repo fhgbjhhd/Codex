@@ -55,7 +55,11 @@ import {
   resolveHookChannel,
   resolveHookDeliver,
 } from "./hooks.js";
-import { sendGatewayAuthFailure, setDefaultSecurityHeaders } from "./http-common.js";
+import {
+  applyCorsHeaders,
+  sendGatewayAuthFailure,
+  setDefaultSecurityHeaders,
+} from "./http-common.js";
 import { getBearerToken } from "./http-utils.js";
 import { handleN8nHttpRequest } from "./n8n-http.js";
 import { handleOpenAiHttpRequest } from "./openai-http.js";
@@ -493,6 +497,12 @@ export function createGatewayHttpServer(opts: {
     setDefaultSecurityHeaders(res, {
       strictTransportSecurity: strictTransportSecurityHeader,
     });
+
+    // Apply CORS headers for allowed first-party web origins (e.g. chat.getcyberflow.ai).
+    // Returns true when the request was an OPTIONS preflight that is fully handled.
+    if (applyCorsHeaders(req, res)) {
+      return;
+    }
 
     // Don't interfere with WebSocket upgrades; ws handles the 'upgrade' event.
     if (String(req.headers.upgrade ?? "").toLowerCase() === "websocket") {

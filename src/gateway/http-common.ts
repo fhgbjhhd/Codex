@@ -3,6 +3,40 @@ import type { GatewayAuthResult } from "./auth.js";
 import { readJsonBody } from "./hooks.js";
 
 /**
+ * Origins that are permitted to make cross-origin HTTP requests to the gateway.
+ * Add trusted first-party web clients here; never use "*" for authenticated routes.
+ */
+const GATEWAY_CORS_ALLOWED_ORIGINS = new Set(["https://chat.getcyberflow.ai"]);
+
+const GATEWAY_CORS_ALLOW_METHODS = "GET, POST, OPTIONS";
+const GATEWAY_CORS_ALLOW_HEADERS = "Content-Type, Authorization";
+
+/**
+ * Applies CORS response headers when the request origin is on the allowlist.
+ * Returns `true` if the request was an OPTIONS preflight that has been fully
+ * handled (caller should return without further processing).
+ */
+export function applyCorsHeaders(req: IncomingMessage, res: ServerResponse): boolean {
+  const origin = req.headers.origin;
+  if (typeof origin !== "string" || !GATEWAY_CORS_ALLOWED_ORIGINS.has(origin)) {
+    return false;
+  }
+  res.setHeader("Access-Control-Allow-Origin", origin);
+  res.setHeader("Access-Control-Allow-Methods", GATEWAY_CORS_ALLOW_METHODS);
+  res.setHeader("Access-Control-Allow-Headers", GATEWAY_CORS_ALLOW_HEADERS);
+  res.setHeader("Vary", "Origin");
+
+  // Handle OPTIONS preflight — respond immediately with 204 No Content.
+  if (req.method === "OPTIONS") {
+    res.setHeader("Access-Control-Max-Age", "86400");
+    res.writeHead(204);
+    res.end();
+    return true;
+  }
+  return false;
+}
+
+/**
  * Apply baseline security headers that are safe for all response types (API JSON,
  * HTML pages, static assets, SSE streams). Headers that restrict framing or set a
  * Content-Security-Policy are intentionally omitted here because some handlers
