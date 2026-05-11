@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terms & Conditions — CyberFlow AI</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Sora:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #111118;
+    --border: #1e1e2e;
+    --accent: #00e5ff;
+    --accent2: #7c3aed;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Sora', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-weight: 300;
+    line-height: 1.8;
+    min-height: 100vh;
+  }
+
+  /* Grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,229,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(10,10,15,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: var(--mono);
+    font-size: 1rem;
+    color: var(--accent);
+    text-decoration: none;
+    letter-spacing: 0.05em;
+  }
+
+  .logo span { color: var(--muted); }
+
+  nav a {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  nav a:hover { color: var(--accent); }
+
+  .hero {
+    position: relative;
+    z-index: 1;
+    padding: 5rem 2rem 3rem;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    border: 1px solid rgba(0,229,255,0.3);
+    padding: 0.25rem 0.75rem;
+    border-radius: 2px;
+    margin-bottom: 1.5rem;
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3.5rem);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+  }
+
+  h1 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  .meta {
+    font-family: var(--mono);
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .meta span { display: flex; align-items: center; gap: 0.5rem; }
+
+  main {
+    position: relative;
+    z-index: 1;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 2rem 6rem;
+  }
+
+  .toc {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    padding: 1.5rem 2rem;
+    margin-bottom: 3rem;
+    border-radius: 0 4px 4px 0;
+  }
+
+  .toc-title {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1rem;
+  }
+
+  .toc ol {
+    list-style: none;
+    counter-reset: toc;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.4rem 2rem;
+  }
+
+  @media (max-width: 600px) {
+    .toc ol { grid-template-columns: 1fr; }
+  }
+
+  .toc li {
+    counter-increment: toc;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+  }
+
+  .toc li::before {
+    content: counter(toc, decimal-leading-zero);
+    font-family: var(--mono);
+    font-size: 0.65rem;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .toc a {
+    font-size: 0.85rem;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .toc a:hover { color: var(--text); }
+
+  section {
+    margin-bottom: 3rem;
+    scroll-margin-top: 5rem;
+  }
+
+  h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  h2 .num {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: var(--accent);
+    background: rgba(0,229,255,0.08);
+    padding: 0.15rem 0.5rem;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  p { margin-bottom: 1rem; font-size: 0.95rem; color: #cbd5e1; }
+
+  ul, ol {
+    margin: 0.75rem 0 1rem 0;
+    padding-left: 1.5rem;
+  }
+
+  li {
+    font-size: 0.95rem;
+    color: #cbd5e1;
+    margin-bottom: 0.4rem;
+  }
+
+  strong { color: var(--text); font-weight: 600; }
+
+  .highlight {
+    background: rgba(0,229,255,0.05);
+    border: 1px solid rgba(0,229,255,0.15);
+    border-radius: 4px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+    color: #94a3b8;
+  }
+
+  .highlight strong { color: var(--accent); }
+
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+
+  footer {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 2rem;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  footer a { color: var(--muted); }
+  footer a:hover { color: var(--accent); }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .hero, main { animation: fadeIn 0.6s ease both; }
+  main { animation-delay: 0.1s; }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="https://getcyberflow.ai" class="logo">CyberFlow<span>.ai</span></a>
+  <nav>
+    <a href="https://chat.getcyberflow.ai">Launch App →</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div class="tag">Legal</div>
+  <h1>Terms &amp; <em>Conditions</em></h1>
+  <p style="color:#94a3b8;font-size:1rem;">Please read these terms carefully before using CyberFlow AI services. By accessing or using our platform, you agree to be bound by these terms.</p>
+  <div class="meta">
+    <span>📅 Effective Date: May 12, 2026</span>
+    <span>🏢 CyberFlow AI Solutions Inc</span>
+    <span>📍 Denver, Colorado, USA</span>
+  </div>
+</div>
+
+<main>
+
+  <div class="toc">
+    <div class="toc-title">// Table of Contents</div>
+    <ol>
+      <li><a href="#acceptance">Acceptance of Terms</a></li>
+      <li><a href="#services">Description of Services</a></li>
+      <li><a href="#eligibility">Eligibility</a></li>
+      <li><a href="#accounts">Accounts & Registration</a></li>
+      <li><a href="#payment">Payment & Subscriptions</a></li>
+      <li><a href="#usage">Acceptable Use</a></li>
+      <li><a href="#ip">Intellectual Property</a></li>
+      <li><a href="#privacy">Privacy & Data</a></li>
+      <li><a href="#disclaimer">Disclaimers</a></li>
+      <li><a href="#liability">Limitation of Liability</a></li>
+      <li><a href="#termination">Termination</a></li>
+      <li><a href="#governing">Governing Law</a></li>
+      <li><a href="#changes">Changes to Terms</a></li>
+      <li><a href="#contact">Contact</a></li>
+    </ol>
+  </div>
+
+  <section id="acceptance">
+    <h2><span class="num">01</span> Acceptance of Terms</h2>
+    <p>By accessing or using any service provided by <strong>CyberFlow AI Solutions Inc</strong> ("CyberFlow," "we," "us," or "our"), including the platform at <a href="https://chat.getcyberflow.ai">chat.getcyberflow.ai</a> and the API gateway at <a href="https://api.getcyberflow.ai">api.getcyberflow.ai</a>, you ("User," "you") agree to be bound by these Terms and Conditions.</p>
+    <p>If you do not agree to these terms, you must not access or use our services.</p>
+  </section>
+
+  <section id="services">
+    <h2><span class="num">02</span> Description of Services</h2>
+    <p>CyberFlow AI provides an AI compute arbitrage platform that aggregates access to leading large language models (LLMs) — including but not limited to DeepSeek, Anthropic Claude, OpenAI GPT, and others — through a unified, OpenAI-compatible API endpoint.</p>
+    <div class="highlight">
+      <strong>Key service features include:</strong>
+      <ul style="margin-top:0.5rem">
+        <li>Multi-model API routing via US-based infrastructure</li>
+        <li>Usage-based credit system with monthly subscription options</li>
+        <li>Web chat interface at chat.getcyberflow.ai</li>
+        <li>Developer API access via api.getcyberflow.ai</li>
+      </ul>
+    </div>
+    <p>We reserve the right to modify, suspend, or discontinue any part of the service at any time with reasonable notice.</p>
+  </section>
+
+  <section id="eligibility">
+    <h2><span class="num">03</span> Eligibility</h2>
+    <p>You must be at least <strong>18 years of age</strong> and capable of forming a legally binding contract to use our services. By using CyberFlow AI, you represent and warrant that you meet these requirements.</p>
+    <p>Our services are not available in jurisdictions where their use would be prohibited by applicable law. You are responsible for ensuring compliance with local laws and regulations.</p>
+  </section>
+
+  <section id="accounts">
+    <h2><span class="num">04</span> Accounts &amp; Registration</h2>
+    <p>You may be required to create an account to access certain features. You agree to:</p>
+    <ul>
+      <li>Provide accurate and complete registration information</li>
+      <li>Maintain the security of your account credentials</li>
+      <li>Notify us immediately of any unauthorized access</li>
+      <li>Accept responsibility for all activity under your account</li>
+    </ul>
+    <p>We reserve the right to suspend or terminate accounts that violate these terms or engage in fraudulent activity.</p>
+  </section>
+
+  <section id="payment">
+    <h2><span class="num">05</span> Payment &amp; Subscriptions</h2>
+    <p>CyberFlow AI offers subscription plans processed through <strong>Lemon Squeezy</strong>, our Merchant of Record. By subscribing, you agree to Lemon Squeezy's terms and our pricing as displayed at the time of purchase.</p>
+    <ul>
+      <li><strong>Billing:</strong> Subscriptions are billed monthly in advance</li>
+      <li><strong>Credits:</strong> Upon payment, usage credits are added to your account balance</li>
+      <li><strong>Refunds:</strong> Refund requests may be submitted within 7 days of purchase if no API calls have been made</li>
+      <li><strong>Cancellation:</strong> You may cancel at any time; access continues until the end of the current billing period</li>
+      <li><strong>Price Changes:</strong> We will provide 30 days' notice before any price increases</li>
+    </ul>
+    <div class="highlight">
+      All payments are processed in USD. Applicable taxes may be added depending on your jurisdiction. Lemon Squeezy, as Merchant of Record, is responsible for tax collection and remittance.
+    </div>
+  </section>
+
+  <section id="usage">
+    <h2><span class="num">06</span> Acceptable Use</h2>
+    <p>You agree to use CyberFlow AI services only for lawful purposes. You must not:</p>
+    <ul>
+      <li>Use the service to generate illegal, harmful, abusive, or malicious content</li>
+      <li>Attempt to reverse-engineer, scrape, or circumvent our systems</li>
+      <li>Resell or redistribute API access without prior written permission</li>
+      <li>Violate the terms of service of any upstream model provider</li>
+      <li>Use the service to infringe intellectual property rights</li>
+      <li>Engage in any activity that disrupts or damages our infrastructure</li>
+    </ul>
+    <p>Violation of acceptable use policies may result in immediate account termination without refund.</p>
+  </section>
+
+  <section id="ip">
+    <h2><span class="num">07</span> Intellectual Property</h2>
+    <p>All content, trademarks, and technology comprising the CyberFlow AI platform are the property of CyberFlow AI Solutions Inc or its licensors. You are granted a limited, non-exclusive, non-transferable license to use our services for their intended purpose.</p>
+    <p>AI-generated outputs produced through our platform are subject to the terms of the respective upstream model providers (Anthropic, OpenAI, DeepSeek, etc.). You retain ownership of your input data and are responsible for ensuring you have the rights to submit such data.</p>
+  </section>
+
+  <section id="privacy">
+    <h2><span class="num">08</span> Privacy &amp; Data</h2>
+    <p>We are committed to protecting your privacy. Our data handling practices include:</p>
+    <ul>
+      <li><strong>US Node Routing:</strong> API requests are routed through US-based infrastructure</li>
+      <li><strong>No Chinese Servers:</strong> Your data does not pass through Chinese-operated servers</li>
+      <li><strong>Minimal Retention:</strong> We do not store conversation content beyond what is necessary for service operation</li>
+      <li><strong>No Selling:</strong> We do not sell your personal data to third parties</li>
+    </ul>
+    <p>For full details, please refer to our Privacy Policy at <a href="https://getcyberflow.ai/privacy">getcyberflow.ai/privacy</a>.</p>
+  </section>
+
+  <section id="disclaimer">
+    <h2><span class="num">09</span> Disclaimers</h2>
+    <p>CyberFlow AI services are provided <strong>"as is"</strong> and <strong>"as available"</strong> without warranties of any kind, either express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or non-infringement.</p>
+    <p>We do not warrant that AI-generated outputs are accurate, complete, or suitable for any specific purpose. Users are solely responsible for evaluating and verifying AI outputs before relying on them.</p>
+  </section>
+
+  <section id="liability">
+    <h2><span class="num">10</span> Limitation of Liability</h2>
+    <p>To the maximum extent permitted by applicable law, CyberFlow AI Solutions Inc shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of profits, data, or goodwill, arising from your use of or inability to use our services.</p>
+    <p>Our total liability to you for any claim arising from these terms or your use of our services shall not exceed the amount paid by you to CyberFlow AI in the <strong>three (3) months</strong> preceding the claim.</p>
+  </section>
+
+  <section id="termination">
+    <h2><span class="num">11</span> Termination</h2>
+    <p>Either party may terminate the service relationship at any time. We reserve the right to suspend or terminate your access immediately if you breach these terms. Upon termination:</p>
+    <ul>
+      <li>Your right to access the service ceases immediately</li>
+      <li>Unused credits are non-refundable unless required by applicable law</li>
+      <li>Provisions that by their nature should survive termination will remain in effect</li>
+    </ul>
+  </section>
+
+  <section id="governing">
+    <h2><span class="num">12</span> Governing Law</h2>
+    <p>These Terms and Conditions are governed by and construed in accordance with the laws of the <strong>State of Colorado, United States of America</strong>, without regard to its conflict of law provisions.</p>
+    <p>Any disputes arising from these terms shall be subject to the exclusive jurisdiction of the courts located in Denver, Colorado. For international users, we will endeavor to resolve disputes through good-faith negotiation before pursuing formal legal action.</p>
+  </section>
+
+  <section id="changes">
+    <h2><span class="num">13</span> Changes to Terms</h2>
+    <p>We may update these Terms and Conditions from time to time. We will notify registered users of material changes via email or in-app notification at least <strong>14 days</strong> before the changes take effect.</p>
+    <p>Your continued use of our services after the effective date of any changes constitutes acceptance of the updated terms.</p>
+  </section>
+
+  <section id="contact">
+    <h2><span class="num">14</span> Contact</h2>
+    <p>If you have any questions about these Terms and Conditions, please contact us:</p>
+    <div class="highlight">
+      <strong>CyberFlow AI Solutions Inc</strong><br>
+      Denver, Colorado, USA<br>
+      EIN: 41-5146165<br><br>
+      📧 <a href="mailto:ceo@getcyberflow.ai">ceo@getcyberflow.ai</a><br>
+      🌐 <a href="https://getcyberflow.ai">getcyberflow.ai</a>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <p>© 2026 CyberFlow AI Solutions Inc · Denver, CO · EIN 41-5146165</p>
+  <p style="margin-top:0.5rem">
+    <a href="https://getcyberflow.ai">Home</a> ·
+    <a href="https://chat.getcyberflow.ai">App</a> ·
+    <a href="mailto:ceo@getcyberflow.ai">Contact</a>
+  </p>
+</footer>
+
+</body>
+</html>
