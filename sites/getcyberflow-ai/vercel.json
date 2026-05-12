@@ -9,10 +9,5 @@
   "github": {
     "silent": true
   },
-  "rewrites": [
-    { "source": "/docs", "destination": "/docs.html" },
-    { "source": "/terms", "destination": "/terms.html" },
-    { "source": "/affiliate", "destination": "/affiliate.html" },
-    { "source": "/(.*)", "destination": "/" }
-  ]
+  "rewrites": [{ "source": "/(.*)", "destination": "/$1" }]
 }
