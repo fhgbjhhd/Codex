@@ -236,6 +236,7 @@ a {
 .hero-panel,
 .module-card,
 .case-card,
+.business-card,
 .compliance-strip,
 .footer {
   border: 1px solid var(--line);
@@ -333,6 +334,7 @@ a {
 }
 
 .module-grid,
+.business-grid,
 .case-grid {
   display: grid;
   gap: 18px;
@@ -344,21 +346,65 @@ a {
 }
 
 .module-card,
-.case-card {
+.case-card,
+.business-card {
   padding: 24px;
 }
 
 .module-card h3,
-.case-card h3 {
+.case-card h3,
+.business-card h3 {
   margin: 0 0 12px;
   font-size: 1.3rem;
 }
 
-.module-card ul {
+.module-card ul,
+.business-list {
   margin: 20px 0 0;
   padding-left: 18px;
   color: var(--muted);
   line-height: 1.8;
+}
+
+.business-section {
+  background:
+    radial-gradient(circle at top left, rgba(53, 255, 122, 0.16), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(255, 212, 71, 0.13), transparent 38%),
+    var(--panel);
+}
+
+.business-grid {
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr) minmax(0, 1.1fr);
+}
+
+.business-card-featured {
+  background:
+    linear-gradient(135deg, rgba(255, 212, 71, 0.12), rgba(53, 255, 122, 0.08)),
+    var(--panel);
+}
+
+.business-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.business-tags span {
+  border: 1px solid rgba(53, 255, 122, 0.28);
+  border-radius: 999px;
+  padding: 8px 10px;
+  color: #eaffe9;
+  background: rgba(53, 255, 122, 0.08);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.business-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
 }
 
 .case-meta {
@@ -414,6 +460,7 @@ a {
 
   .hero-grid,
   .module-grid,
+  .business-grid,
   .case-grid,
   .compliance-strip,
   .footer {
@@ -453,6 +500,7 @@ a {
 
   .section,
   .module-card,
+  .business-card,
   .case-card {
     padding: 22px;
   }
